@@ -121,3 +121,18 @@ export interface Turma {
   alunoIds: string[];
   criadoEm: string;
 }
+
+
+export type StatusPresenca = 'presente' | 'falta' | 'atraso' | 'saida_antecipada';
+
+export interface Presenca {
+  id: string;
+  escolaId: string;
+  alunoId: string;
+  turmaId: string;
+  data: string; // ISO date YYYY-MM-DD
+  status: StatusPresenca;
+  justificativa?: string | undefined;
+  autorUid: string;
+  criadoEm: string;
+}
