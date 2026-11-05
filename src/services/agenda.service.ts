@@ -2,10 +2,10 @@ import { ForbiddenError, NotFoundError } from '../domain/errors.js';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Role } from '../domain/types/roles.js';
 import type { AtualizarAgendaCmd, CriarAgendaCmd } from '../domain/schemas/commands.js';
-import type { Paciente } from '../domain/types/entidades.js';
+import type { Aluno } from '../domain/types/entidades.js';
 import type { ItemAgenda } from '../domain/types/agenda.js';
 import { agendaRepo } from '../repositories/agenda.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
 import { notificacaoService } from './notificacao.service.js';
 
@@ -17,27 +17,24 @@ export interface AtorAgenda {
 const TZ = 'America/Sao_Paulo';
 const JANELA_MINUTOS = 30;
 
-function podeAcessar(paciente: Paciente, ator: AtorAgenda): boolean {
+function podeAcessar(paciente: Aluno, ator: AtorAgenda): boolean {
   if (ator.role === 'admin') return true;
   if (ator.role === 'responsavel') {
-    return paciente.responsavelIds.includes(ator.uid) || paciente.familiarIds.includes(ator.uid);
-  }
-  if (ator.role === 'familiar') {
     return (
-      paciente.familiarIds.includes(ator.uid) ||
       paciente.responsavelIds.includes(ator.uid) ||
-      paciente.cuidadorIds.includes(ator.uid)
+      paciente.familiarIds.includes(ator.uid) ||
+      paciente.professorIds.includes(ator.uid)
     );
   }
-  if (ator.role === 'cuidador') return paciente.cuidadorIds.includes(ator.uid);
+  if (ator.role === 'professor') return paciente.professorIds.includes(ator.uid);
   return false;
 }
 
-async function pacientePermitido(pacienteId: string, ator: AtorAgenda): Promise<Paciente> {
-  const paciente = await pacientesRepo.findById(pacienteId);
-  if (!paciente) throw new NotFoundError('Paciente não encontrado');
+async function pacientePermitido(alunoId: string, ator: AtorAgenda): Promise<Aluno> {
+  const paciente = await alunosRepo.findById(alunoId);
+  if (!paciente) throw new NotFoundError('Aluno não encontrado');
   if (!podeAcessar(paciente, ator)) {
-    throw new ForbiddenError('Paciente não vinculado ao usuário');
+    throw new ForbiddenError('Aluno não vinculado ao usuário');
   }
   return paciente;
 }
@@ -72,7 +69,7 @@ function dataDeIsoSaoPaulo(iso: string): string {
   return dataHoraSaoPaulo(new Date(iso)).data;
 }
 
-function payloadLembrete(paciente: Paciente, item: ItemAgenda) {
+function payloadLembrete(paciente: Aluno, item: ItemAgenda) {
   return {
     title: `Lembrete: ${item.titulo}`,
     body: `${paciente.nome}: ${item.descricao || item.titulo}`.slice(0, 180),
@@ -80,7 +77,7 @@ function payloadLembrete(paciente: Paciente, item: ItemAgenda) {
     renotify: true,
     icon: '/icons/icon-192x192.png',
     data: {
-      pacienteId: item.pacienteId,
+      alunoId: item.alunoId,
       lembreteId: item.id,
       url: '/responsavel/lembretes',
     },
@@ -89,22 +86,22 @@ function payloadLembrete(paciente: Paciente, item: ItemAgenda) {
 }
 
 export const agendaService = {
-  async listar(ator: AtorAgenda, pacienteId?: string): Promise<ItemAgenda[]> {
+  async listar(ator: AtorAgenda, alunoId?: string): Promise<ItemAgenda[]> {
     if (ator.role === 'admin') {
-      return pacienteId ? agendaRepo.listByPaciente(pacienteId) : agendaRepo.listAll();
+      return alunoId ? agendaRepo.listByAluno(alunoId) : agendaRepo.listAll();
     }
-    if (pacienteId) {
-      await pacientePermitido(pacienteId, ator);
-      return agendaRepo.listByPaciente(pacienteId);
+    if (alunoId) {
+      await pacientePermitido(alunoId, ator);
+      return agendaRepo.listByAluno(alunoId);
     }
-    const meus = await pacientesRepo.listByUsuario(ator.uid);
-    return agendaRepo.listByPacientes(meus.map((p) => p.id));
+    const meus = await alunosRepo.listByUsuario(ator.uid);
+    return agendaRepo.listByAlunos(meus.map((p) => p.id));
   },
 
   async criar(cmd: CriarAgendaCmd, ator: AtorAgenda): Promise<ItemAgenda> {
-    await pacientePermitido(cmd.pacienteId, ator);
+    await pacientePermitido(cmd.alunoId, ator);
     const item = await agendaRepo.create({
-      pacienteId: cmd.pacienteId,
+      alunoId: cmd.alunoId,
       categoria: cmd.categoria,
       ...(cmd.rotinaId ? { rotinaId: cmd.rotinaId } : {}),
       titulo: cmd.titulo,
@@ -117,7 +114,7 @@ export const agendaService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: cmd.categoria === 'lembrete' ? 'criar_lembrete' : 'criar_rotina',
-      alvo: `${cmd.pacienteId}/${item.id}`,
+      alvo: `${cmd.alunoId}/${item.id}`,
       nivel: 'info',
     });
     return item;
@@ -126,7 +123,7 @@ export const agendaService = {
   async atualizar(id: string, cmd: AtualizarAgendaCmd, ator: AtorAgenda): Promise<ItemAgenda> {
     const item = await agendaRepo.findById(id);
     if (!item) throw new NotFoundError('Item da agenda não encontrado');
-    await pacientePermitido(item.pacienteId, ator);
+    await pacientePermitido(item.alunoId, ator);
 
     const patch: Record<string, unknown> = {};
     if (cmd.categoria !== undefined) patch['categoria'] = cmd.categoria;
@@ -149,7 +146,7 @@ export const agendaService = {
   async remover(id: string, ator: AtorAgenda): Promise<{ id: string; deletado: true }> {
     const item = await agendaRepo.findById(id);
     if (!item) throw new NotFoundError('Item da agenda não encontrado');
-    await pacientePermitido(item.pacienteId, ator);
+    await pacientePermitido(item.alunoId, ator);
     await agendaRepo.remove(id);
     return { id, deletado: true };
   },
@@ -166,7 +163,7 @@ export const agendaService = {
       if (atraso < 0 || atraso > JANELA_MINUTOS) continue;
       if (item.ultimoEnvioEm && dataDeIsoSaoPaulo(item.ultimoEnvioEm) === data) continue;
 
-      const paciente = await pacientesRepo.findById(item.pacienteId);
+      const paciente = await alunosRepo.findById(item.alunoId);
       if (!paciente) continue;
 
       // Marca antes de enviar para evitar disparo duplicado entre execuções.
@@ -176,7 +173,7 @@ export const agendaService = {
         ...new Set([
           ...paciente.responsavelIds,
           ...paciente.familiarIds,
-          ...paciente.cuidadorIds,
+          ...paciente.professorIds,
         ]),
       ];
       if (destinatarios.length === 0) continue;
@@ -197,13 +194,13 @@ export const agendaService = {
   async testar(id: string, ator: AtorAgenda) {
     const item = await agendaRepo.findById(id);
     if (!item) throw new NotFoundError('Lembrete não encontrado');
-    const paciente = await pacientePermitido(item.pacienteId, ator);
+    const paciente = await pacientePermitido(item.alunoId, ator);
 
     const destinatarios = [
       ...new Set([
         ...paciente.responsavelIds,
         ...paciente.familiarIds,
-        ...paciente.cuidadorIds,
+        ...paciente.professorIds,
         ator.uid,
       ]),
     ];

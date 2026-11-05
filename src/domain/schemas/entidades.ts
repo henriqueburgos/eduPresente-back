@@ -27,7 +27,7 @@ export const MedicoResponsavelSchema = z.object({
   telefone: z.string().optional(),
 });
 
-export const PacienteSchema = z.object({
+export const AlunoSchema = z.object({
   id: z.string().min(1),
   escolaId: z.string().optional(),
   nome: z.string().min(1),
@@ -37,7 +37,7 @@ export const PacienteSchema = z.object({
   fotoUrl: z.string().max(400000).optional(),
   condicoes: z.array(z.string()).default([]),
   responsavelIds: z.array(z.string()).default([]),
-  cuidadorIds: z.array(z.string()).default([]),
+  professorIds: z.array(z.string()).default([]),
   familiarIds: z.array(z.string()).default([]),
   entradaEm: z.string().min(1),
   alergias: z.array(z.string()).default([]),
@@ -49,11 +49,11 @@ export const PacienteSchema = z.object({
   grauDependencia: z.enum(['independente', 'parcial', 'total']).default('independente'),
   observacoesClinicas: z.string().max(2000).optional(),
 });
-export type PacienteInput = z.infer<typeof PacienteSchema>;
+export type AlunoInput = z.infer<typeof AlunoSchema>;
 
 export const AtividadeSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   tipo: z.enum(TIPOS_ATIVIDADE as unknown as [TipoAtividade, ...TipoAtividade[]]),
   descricao: z.string().min(1),
   autorUid: z.string().min(1),
@@ -70,7 +70,7 @@ export const UsuarioSchema = z.object({
   nome: z.string().min(1),
   email: z.string().email(),
   role: z.enum(ROLES as unknown as [Role, ...Role[]]),
-  pacienteIds: z.array(z.string()).default([]),
+  alunoIds: z.array(z.string()).default([]),
   fcmTokens: z.array(z.string()).default([]),
   ativo: z.boolean().default(true),
   criadoEm: z.string().min(1),
@@ -99,7 +99,7 @@ export type ComunicadoInput = z.infer<typeof ComunicadoSchema>;
 
 export const MaterialEstoqueSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   nome: z.string().min(1),
   categoria: z.enum(CATEGORIAS_MATERIAL as unknown as [CategoriaMaterial, ...CategoriaMaterial[]]),
   quantidade: z.number().int().nonnegative(),
@@ -114,7 +114,7 @@ export type MaterialEstoqueInput = z.infer<typeof MaterialEstoqueSchema>;
 
 export const ItemAgendaSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   categoria: z.enum(CATEGORIAS_AGENDA as unknown as [CategoriaAgenda, ...CategoriaAgenda[]]),
   rotinaId: z.string().optional(),
   titulo: z.string().min(1).max(120),
@@ -143,7 +143,7 @@ export type NotificacaoUsuarioInput = z.infer<typeof NotificacaoUsuarioSchema>;
 
 export const PrescricaoSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   medicamento: z.string().min(1).max(120),
   dose: z.string().min(1).max(80),
   via: z.enum(VIAS_ADMINISTRACAO as unknown as [ViaAdministracao, ...ViaAdministracao[]]),
@@ -165,7 +165,7 @@ export type PrescricaoInput = z.infer<typeof PrescricaoSchema>;
 export const AdministracaoSchema = z.object({
   id: z.string().min(1),
   prescricaoId: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   data: z.string().min(1),
   horario: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   status: z.enum(
@@ -180,7 +180,7 @@ export type AdministracaoInput = z.infer<typeof AdministracaoSchema>;
 
 export const OcorrenciaSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   titulo: z.string().min(1).max(160),
   descricao: z.string().min(1).max(2000),
   gravidade: z.enum(
@@ -198,7 +198,7 @@ export type OcorrenciaInput = z.infer<typeof OcorrenciaSchema>;
 
 export const DocumentoSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   nome: z.string().min(1).max(200),
   categoria: z.enum(CATEGORIAS_DOCUMENTO as unknown as [CategoriaDocumento, ...CategoriaDocumento[]]),
   url: z.string().url(),
@@ -213,7 +213,7 @@ export type DocumentoInput = z.infer<typeof DocumentoSchema>;
 
 export const MensagemSchema = z.object({
   id: z.string().min(1),
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   autorUid: z.string().min(1),
   autorNome: z.string().min(1),
   autorRole: z.enum(ROLES as unknown as [Role, ...Role[]]),

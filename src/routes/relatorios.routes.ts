@@ -8,7 +8,7 @@ router.use(authMiddleware);
 
 router.get(
   '/paciente/:id.pdf',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   relatorioController.paciente,
 );
 

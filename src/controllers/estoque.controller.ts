@@ -12,8 +12,8 @@ export const estoqueController = {
 
   listar: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const pacienteId = typeof req.query.pacienteId === 'string' ? req.query.pacienteId : undefined;
-    const list = await estoqueService.listar(ator, pacienteId);
+    const alunoId = typeof req.query.alunoId === 'string' ? req.query.alunoId : undefined;
+    const list = await estoqueService.listar(ator, alunoId);
     res.json(list);
   }),
 

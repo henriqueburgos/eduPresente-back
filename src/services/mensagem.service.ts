@@ -2,9 +2,9 @@ import { ForbiddenError, NotFoundError } from '../domain/errors.js';
 import type { Role } from '../domain/types/roles.js';
 import type { CriarMensagemCmd } from '../domain/schemas/commands.js';
 import type { Mensagem } from '../domain/types/mensagem.js';
-import type { Paciente } from '../domain/types/entidades.js';
+import type { Aluno } from '../domain/types/entidades.js';
 import { mensagensRepo } from '../repositories/mensagens.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
 import { notificacaoService } from './notificacao.service.js';
 
@@ -13,20 +13,20 @@ export interface AtorMensagem {
   role: Role;
 }
 
-function podeAcessar(paciente: Paciente, ator: AtorMensagem): boolean {
+function podeAcessar(paciente: Aluno, ator: AtorMensagem): boolean {
   if (ator.role === 'admin') return true;
   return (
-    paciente.cuidadorIds.includes(ator.uid) ||
+    paciente.professorIds.includes(ator.uid) ||
     paciente.responsavelIds.includes(ator.uid) ||
     paciente.familiarIds.includes(ator.uid)
   );
 }
 
-async function pacientePermitido(pacienteId: string, ator: AtorMensagem): Promise<Paciente> {
-  const paciente = await pacientesRepo.findById(pacienteId);
-  if (!paciente) throw new NotFoundError('Paciente não encontrado');
+async function pacientePermitido(alunoId: string, ator: AtorMensagem): Promise<Aluno> {
+  const paciente = await alunosRepo.findById(alunoId);
+  if (!paciente) throw new NotFoundError('Aluno não encontrado');
   if (!podeAcessar(paciente, ator)) {
-    throw new ForbiddenError('Paciente não vinculado ao usuário');
+    throw new ForbiddenError('Aluno não vinculado ao usuário');
   }
   return paciente;
 }
@@ -34,24 +34,24 @@ async function pacientePermitido(pacienteId: string, ator: AtorMensagem): Promis
 const LIMITE_TEXTO = 2000;
 
 export const mensagemService = {
-  async listar(ator: AtorMensagem, pacienteId?: string): Promise<Mensagem[]> {
-    if (pacienteId) {
-      await pacientePermitido(pacienteId, ator);
-      return mensagensRepo.listByPaciente(pacienteId);
+  async listar(ator: AtorMensagem, alunoId?: string): Promise<Mensagem[]> {
+    if (alunoId) {
+      await pacientePermitido(alunoId, ator);
+      return mensagensRepo.listByAluno(alunoId);
     }
     if (ator.role === 'admin') return mensagensRepo.listAll();
-    const meus = await pacientesRepo.listByUsuario(ator.uid);
-    return mensagensRepo.listByPacientes(meus.map((p) => p.id));
+    const meus = await alunosRepo.listByUsuario(ator.uid);
+    return mensagensRepo.listByAlunos(meus.map((p) => p.id));
   },
 
   async criar(cmd: CriarMensagemCmd, ator: AtorMensagem): Promise<Mensagem> {
-    const paciente = await pacientePermitido(cmd.pacienteId, ator);
+    const paciente = await pacientePermitido(cmd.alunoId, ator);
     const texto = cmd.texto.trim().slice(0, LIMITE_TEXTO);
     const autor = await usuariosRepo.findById(ator.uid);
     const autorNome = autor?.nome ?? ator.uid;
 
     const mensagem = await mensagensRepo.create({
-      pacienteId: cmd.pacienteId,
+      alunoId: cmd.alunoId,
       autorUid: ator.uid,
       autorNome,
       autorRole: ator.role,
@@ -63,7 +63,7 @@ export const mensagemService = {
       ...new Set([
         ...paciente.responsavelIds,
         ...paciente.familiarIds,
-        ...paciente.cuidadorIds,
+        ...paciente.professorIds,
       ]),
     ].filter((uid) => uid !== ator.uid);
 
@@ -72,10 +72,10 @@ export const mensagemService = {
         .enviarParaUids(participantes, {
           title: `Nova mensagem de ${autorNome}`,
           body: `${paciente.nome}: ${texto}`.slice(0, 180),
-          tag: `mensagem-${cmd.pacienteId}`,
+          tag: `mensagem-${cmd.alunoId}`,
           renotify: true,
           data: {
-            pacienteId: cmd.pacienteId,
+            alunoId: cmd.alunoId,
             mensagemId: mensagem.id,
             tipo: 'mensagem',
             url: '/mensagens',
@@ -88,9 +88,9 @@ export const mensagemService = {
     return mensagem;
   },
 
-  async marcarLidas(pacienteId: string, ator: AtorMensagem): Promise<{ atualizadas: number }> {
-    await pacientePermitido(pacienteId, ator);
-    const atualizadas = await mensagensRepo.marcarLidas(pacienteId, ator.uid);
+  async marcarLidas(alunoId: string, ator: AtorMensagem): Promise<{ atualizadas: number }> {
+    await pacientePermitido(alunoId, ator);
+    const atualizadas = await mensagensRepo.marcarLidas(alunoId, ator.uid);
     return { atualizadas };
   },
 };

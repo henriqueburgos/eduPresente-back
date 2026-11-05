@@ -15,7 +15,7 @@ function ordenarPorNome(list: MaterialEstoque[]): MaterialEstoque[] {
 
 export const estoqueRepo = {
   async create(data: {
-    pacienteId: string;
+    alunoId: string;
     nome: string;
     categoria: CategoriaMaterial;
     quantidade: number;
@@ -42,18 +42,18 @@ export const estoqueRepo = {
     return toMaterial(doc.id, doc.data()!);
   },
 
-  async listByPaciente(pacienteId: string): Promise<MaterialEstoque[]> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async listByAluno(alunoId: string): Promise<MaterialEstoque[]> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     return ordenarPorNome(snap.docs.map((d) => toMaterial(d.id, d.data())));
   },
 
-  async listByPacientes(pacienteIds: string[]): Promise<MaterialEstoque[]> {
-    if (pacienteIds.length === 0) return [];
+  async listByAlunos(alunoIds: string[]): Promise<MaterialEstoque[]> {
+    if (alunoIds.length === 0) return [];
     const lotes: string[][] = [];
-    for (let i = 0; i < pacienteIds.length; i += 30) lotes.push(pacienteIds.slice(i, i + 30));
+    for (let i = 0; i < alunoIds.length; i += 30) lotes.push(alunoIds.slice(i, i + 30));
 
     const snaps = await Promise.all(
-      lotes.map((lote) => db.collection(COL).where('pacienteId', 'in', lote).get()),
+      lotes.map((lote) => db.collection(COL).where('alunoId', 'in', lote).get()),
     );
 
     const map = new Map<string, MaterialEstoque>();
@@ -100,8 +100,8 @@ export const estoqueRepo = {
     await db.collection(COL).doc(id).delete();
   },
 
-  async removeByPaciente(pacienteId: string): Promise<number> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async removeByAluno(alunoId: string): Promise<number> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     await Promise.all(snap.docs.map((d) => d.ref.delete()));
     return snap.size;
   },

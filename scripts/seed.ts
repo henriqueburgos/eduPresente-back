@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 import { auth as firebaseAuth } from '../src/config/firebase.js';
 import { db } from '../src/repositories/base.js';
-import { pacientesRepo } from '../src/repositories/pacientes.repo.js';
+import { alunosRepo } from '../src/repositories/alunos.repo.js';
 import { usuariosRepo } from '../src/repositories/usuarios.repo.js';
 import { atividadesRepo } from '../src/repositories/atividades.repo.js';
 import { comunicadosRepo } from '../src/repositories/comunicados.repo.js';
@@ -14,18 +14,18 @@ interface SeedUser {
   uid: string;
   email: string;
   nome: string;
-  role: 'admin' | 'cuidador' | 'responsavel' | 'familiar';
-  pacienteIds: string[];
+  role: 'admin' | 'professor' | 'responsavel' | 'responsavel';
+  alunoIds: string[];
 }
 
 const USERS: SeedUser[] = [
-  { uid: 'usr-cuid-1', email: 'cuidador@presentesempre.app', nome: 'Marina Alves', role: 'cuidador', pacienteIds: ['pac-1', 'pac-2'] },
-  { uid: 'usr-cuid-2', email: 'cuidador2@presentesempre.app', nome: 'Carlos Mendes', role: 'cuidador', pacienteIds: ['pac-2', 'pac-3'] },
-  { uid: 'usr-resp-1', email: 'responsavel@presentesempre.app', nome: 'Helena Duarte', role: 'responsavel', pacienteIds: ['pac-1'] },
-  { uid: 'usr-resp-2', email: 'responsavel2@presentesempre.app', nome: 'Roberto Ferraz', role: 'responsavel', pacienteIds: ['pac-2'] },
-  { uid: 'usr-resp-3', email: 'responsavel3@presentesempre.app', nome: 'Ana Ramos', role: 'responsavel', pacienteIds: ['pac-3'] },
-  { uid: 'usr-fam-1', email: 'familiar@presentesempre.app', nome: 'João Duarte', role: 'familiar', pacienteIds: ['pac-1'] },
-  { uid: 'usr-admin-1', email: 'admin@presentesempre.app', nome: 'Cláudia Menezes', role: 'admin', pacienteIds: [] },
+  { uid: 'usr-cuid-1', email: 'cuidador@presentesempre.app', nome: 'Marina Alves', role: 'professor', alunoIds: ['pac-1', 'pac-2'] },
+  { uid: 'usr-cuid-2', email: 'cuidador2@presentesempre.app', nome: 'Carlos Mendes', role: 'professor', alunoIds: ['pac-2', 'pac-3'] },
+  { uid: 'usr-resp-1', email: 'responsavel@presentesempre.app', nome: 'Helena Duarte', role: 'responsavel', alunoIds: ['pac-1'] },
+  { uid: 'usr-resp-2', email: 'responsavel2@presentesempre.app', nome: 'Roberto Ferraz', role: 'responsavel', alunoIds: ['pac-2'] },
+  { uid: 'usr-resp-3', email: 'responsavel3@presentesempre.app', nome: 'Ana Ramos', role: 'responsavel', alunoIds: ['pac-3'] },
+  { uid: 'usr-fam-1', email: 'familiar@presentesempre.app', nome: 'João Duarte', role: 'responsavel', alunoIds: ['pac-1'] },
+  { uid: 'usr-admin-1', email: 'admin@presentesempre.app', nome: 'Cláudia Menezes', role: 'admin', alunoIds: [] },
 ];
 
 async function upsertAuthUser(u: SeedUser) {
@@ -35,7 +35,7 @@ async function upsertAuthUser(u: SeedUser) {
   } catch {
     await firebaseAuth.createUser({ uid: u.uid, email: u.email, password: DEMO_PASSWORD, displayName: u.nome, disabled: false });
   }
-  await firebaseAuth.setCustomUserClaims(u.uid, { role: u.role, pacienteIds: u.pacienteIds });
+  await firebaseAuth.setCustomUserClaims(u.uid, { role: u.role, alunoIds: u.alunoIds });
 }
 
 async function run() {
@@ -49,18 +49,18 @@ async function run() {
       nome: u.nome,
       email: u.email,
       role: u.role,
-      pacienteIds: u.pacienteIds,
+      alunoIds: u.alunoIds,
       ativo: true,
     }).catch(async () => {
       await db.collection('usuarios').doc(u.uid).set(
-        { nome: u.nome, email: u.email, role: u.role, pacienteIds: u.pacienteIds, ativo: true },
+        { nome: u.nome, email: u.email, role: u.role, alunoIds: u.alunoIds, ativo: true },
         { merge: true },
       );
     });
     console.log(`  ✓ usuário ${u.uid} (${u.role})`);
   }
 
-  // Pacientes
+  // Alunos
   const pacientes = [
     { id: 'pac-1', nome: 'Alzira Nogueira', idade: 84, quarto: '102-A', condicoes: ['Hipertensão', 'Diabetes'], responsavelIds: ['usr-resp-1'], cuidadorIds: ['usr-cuid-1'], familiarIds: ['usr-fam-1'], entradaEm: '2024-01-15' },
     { id: 'pac-2', nome: 'Osvaldo Ferraz', idade: 78, quarto: '105-B', condicoes: ['Alzheimer leve'], responsavelIds: ['usr-resp-2'], cuidadorIds: ['usr-cuid-1', 'usr-cuid-2'], familiarIds: [], entradaEm: '2024-02-03' },
@@ -73,10 +73,10 @@ async function run() {
 
   // Atividades iniciais
   const atividades = [
-    { id: 'ativ-1', pacienteId: 'pac-1', tipo: 'alimentacao', descricao: 'Café da manhã completo', autorUid: 'usr-cuid-1', autorNome: 'Marina Alves', criadoEm: new Date().toISOString() },
-    { id: 'ativ-2', pacienteId: 'pac-1', tipo: 'medicacao', descricao: 'Losartana 50mg', autorUid: 'usr-cuid-1', autorNome: 'Marina Alves', criadoEm: new Date(Date.now() - 3600_000).toISOString() },
-    { id: 'ativ-3', pacienteId: 'pac-2', tipo: 'higiene', descricao: 'Banho completo', autorUid: 'usr-cuid-2', autorNome: 'Carlos Mendes', criadoEm: new Date(Date.now() - 7200_000).toISOString() },
-    { id: 'ativ-4', pacienteId: 'pac-3', tipo: 'ocorrencia', descricao: 'Queda leve sem ferimentos', autorUid: 'usr-cuid-2', autorNome: 'Carlos Mendes', criadoEm: new Date(Date.now() - 10800_000).toISOString() },
+    { id: 'ativ-1', alunoId: 'pac-1', tipo: 'alimentacao', descricao: 'Café da manhã completo', autorUid: 'usr-cuid-1', autorNome: 'Marina Alves', criadoEm: new Date().toISOString() },
+    { id: 'ativ-2', alunoId: 'pac-1', tipo: 'medicacao', descricao: 'Losartana 50mg', autorUid: 'usr-cuid-1', autorNome: 'Marina Alves', criadoEm: new Date(Date.now() - 3600_000).toISOString() },
+    { id: 'ativ-3', alunoId: 'pac-2', tipo: 'higiene', descricao: 'Banho completo', autorUid: 'usr-cuid-2', autorNome: 'Carlos Mendes', criadoEm: new Date(Date.now() - 7200_000).toISOString() },
+    { id: 'ativ-4', alunoId: 'pac-3', tipo: 'ocorrencia', descricao: 'Queda leve sem ferimentos', autorUid: 'usr-cuid-2', autorNome: 'Carlos Mendes', criadoEm: new Date(Date.now() - 10800_000).toISOString() },
   ];
   for (const a of atividades) {
     await db.collection('atividades').doc(a.id).set(a, { merge: true });

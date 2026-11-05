@@ -4,18 +4,18 @@ import { RegistrarAtividadeCmdSchema, ConviteCmdSchema, PatchUsuarioCmdSchema } 
 
 describe('schemas', () => {
   it('RegistrarAtividadeCmd válido', () => {
-    const r = RegistrarAtividadeCmdSchema.safeParse({ pacienteId: 'p1', tipo: 'alimentacao', descricao: 'ok' });
+    const r = RegistrarAtividadeCmdSchema.safeParse({ alunoId: 'p1', tipo: 'alimentacao', descricao: 'ok' });
     expect(r.success).toBe(true);
   });
 
   it('RegistrarAtividadeCmd inválido (tipo)', () => {
-    const r = RegistrarAtividadeCmdSchema.safeParse({ pacienteId: 'p1', tipo: 'foo', descricao: 'ok' });
+    const r = RegistrarAtividadeCmdSchema.safeParse({ alunoId: 'p1', tipo: 'foo', descricao: 'ok' });
     expect(r.success).toBe(false);
   });
 
   it('RegistrarAtividadeCmd aceita clientRequestId da fila offline', () => {
     const r = RegistrarAtividadeCmdSchema.safeParse({
-      pacienteId: 'p1',
+      alunoId: 'p1',
       tipo: 'alimentacao',
       descricao: 'ok',
       clientRequestId: 'req-abc-123',
@@ -25,7 +25,7 @@ describe('schemas', () => {
 
   it('RegistrarAtividadeCmd aceita consumo de estoque', () => {
     const r = RegistrarAtividadeCmdSchema.safeParse({
-      pacienteId: 'p1',
+      alunoId: 'p1',
       tipo: 'higiene',
       descricao: 'Banho com sabonete',
       consumos: [{ materialId: 'est-1', quantidade: 2 }],
@@ -34,7 +34,7 @@ describe('schemas', () => {
   });
 
   it('RegistrarAtividadeCmd rejeita consumo inválido', () => {
-    const base = { pacienteId: 'p1', tipo: 'higiene', descricao: 'ok' };
+    const base = { alunoId: 'p1', tipo: 'higiene', descricao: 'ok' };
     expect(
       RegistrarAtividadeCmdSchema.safeParse({
         ...base,
@@ -50,7 +50,7 @@ describe('schemas', () => {
   });
 
   it('ConviteCmd válido', () => {
-    const r = ConviteCmdSchema.safeParse({ nome: 'X', email: 'x@y.com', role: 'admin', pacienteIds: [] });
+    const r = ConviteCmdSchema.safeParse({ nome: 'X', email: 'x@y.com', role: 'admin', alunoIds: [] });
     expect(r.success).toBe(true);
   });
 

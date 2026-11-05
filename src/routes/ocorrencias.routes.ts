@@ -13,13 +13,13 @@ router.use(authMiddleware);
 router.get('/', ocorrenciaController.listar);
 router.post(
   '/',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(CriarOcorrenciaCmdSchema),
   ocorrenciaController.criar,
 );
 router.patch(
   '/:id',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(AtualizarOcorrenciaCmdSchema),
   ocorrenciaController.atualizar,
 );

@@ -1,45 +1,45 @@
 import type { Request, Response } from 'express';
 
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
-import { pacienteService } from '../services/paciente.service.js';
+import { alunoService } from '../services/aluno.service.js';
 import { claimsService } from '../services/claims.service.js';
 import { NotFoundError, ForbiddenError } from '../domain/errors.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-export const pacientesController = {
+export const alunosController = {
   criar: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const paciente = await pacienteService.criar(req.body, ator);
+    const paciente = await alunoService.criar(req.body, ator);
     res.status(201).json(paciente);
   }),
 
   atualizar: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const paciente = await pacienteService.atualizar(req.params.id!, req.body, ator);
+    const paciente = await alunoService.atualizar(req.params.id!, req.body, ator);
     res.json(paciente);
   }),
 
   removerVinculo: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const paciente = await pacienteService.removerVinculo(req.params.id!, req.params.uid!, ator);
+    const paciente = await alunoService.removerVinculo(req.params.id!, req.params.uid!, ator);
     res.json(paciente);
   }),
 
   deletar: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const result = await pacienteService.deletar(req.params.id!, ator);
+    const result = await alunoService.deletar(req.params.id!, ator);
     res.json(result);
   }),
 
   vinculos: asyncHandler(async (req: Request, res: Response) => {
     if (req.user!.role !== 'admin') throw new ForbiddenError('Apenas admin');
     const id = req.params.id!;
-    const paciente = await pacientesRepo.findById(id);
-    if (!paciente) throw new NotFoundError('Paciente nao encontrado');
+    const paciente = await alunosRepo.findById(id);
+    if (!paciente) throw new NotFoundError('Aluno nao encontrado');
 
-    const novoCuid = req.body.cuidadorIds ?? paciente.cuidadorIds;
+    const novoCuid = req.body.professorIds ?? paciente.professorIds;
     const novoResp = req.body.responsavelIds ?? paciente.responsavelIds;
     const novoFam = req.body.familiarIds ?? paciente.familiarIds;
 
@@ -51,20 +51,20 @@ export const pacientesController = {
       for (const uid of removed) {
         const u = await usuariosRepo.findById(uid);
         if (u) {
-          await usuariosRepo.updatePacienteIds(uid, u.pacienteIds.filter((p) => p !== id));
+          await usuariosRepo.updateAlunoIds(uid, u.alunoIds.filter((p) => p !== id));
           alterados.add(uid);
         }
       }
       for (const uid of added) {
         const u = await usuariosRepo.findById(uid);
-        if (u && !u.pacienteIds.includes(id)) {
-          await usuariosRepo.updatePacienteIds(uid, [...u.pacienteIds, id]);
+        if (u && !u.alunoIds.includes(id)) {
+          await usuariosRepo.updateAlunoIds(uid, [...u.alunoIds, id]);
           alterados.add(uid);
         }
       }
     };
 
-    await sync(paciente.cuidadorIds, novoCuid);
+    await sync(paciente.professorIds, novoCuid);
     await sync(paciente.responsavelIds, novoResp);
     await sync(paciente.familiarIds, novoFam);
 
@@ -73,8 +73,8 @@ export const pacientesController = {
     // devem desfazer o vínculo: o app também se corrige ao abrir.
     await Promise.allSettled([...alterados].map((uid) => claimsService.atualizarClaims(uid)));
 
-    const updated = await pacientesRepo.update(id, {
-      cuidadorIds: novoCuid,
+    const updated = await alunosRepo.update(id, {
+      professorIds: novoCuid,
       responsavelIds: novoResp,
       familiarIds: novoFam,
     });

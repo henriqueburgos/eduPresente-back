@@ -7,10 +7,10 @@ import type {
   RegistrarAdministracaoCmd,
 } from '../domain/schemas/commands.js';
 import type { Administracao, Prescricao } from '../domain/types/medicacao.js';
-import type { Paciente } from '../domain/types/entidades.js';
+import type { Aluno } from '../domain/types/entidades.js';
 import { prescricoesRepo } from '../repositories/prescricoes.repo.js';
 import { administracoesRepo } from '../repositories/administracoes.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
 import { estoqueRepo } from '../repositories/estoque.repo.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
@@ -26,27 +26,24 @@ export interface AtorMedicacao {
 const TZ = 'America/Sao_Paulo';
 const JANELA_ATRASO = 30;
 
-function podeAcessar(paciente: Paciente, ator: AtorMedicacao): boolean {
+function podeAcessar(paciente: Aluno, ator: AtorMedicacao): boolean {
   if (ator.role === 'admin') return true;
   if (ator.role === 'responsavel') {
-    return paciente.responsavelIds.includes(ator.uid) || paciente.familiarIds.includes(ator.uid);
-  }
-  if (ator.role === 'familiar') {
     return (
-      paciente.familiarIds.includes(ator.uid) ||
       paciente.responsavelIds.includes(ator.uid) ||
-      paciente.cuidadorIds.includes(ator.uid)
+      paciente.familiarIds.includes(ator.uid) ||
+      paciente.professorIds.includes(ator.uid)
     );
   }
-  if (ator.role === 'cuidador') return paciente.cuidadorIds.includes(ator.uid);
+  if (ator.role === 'professor') return paciente.professorIds.includes(ator.uid);
   return false;
 }
 
-async function pacientePermitido(pacienteId: string, ator: AtorMedicacao): Promise<Paciente> {
-  const paciente = await pacientesRepo.findById(pacienteId);
-  if (!paciente) throw new NotFoundError('Paciente não encontrado');
+async function pacientePermitido(alunoId: string, ator: AtorMedicacao): Promise<Aluno> {
+  const paciente = await alunosRepo.findById(alunoId);
+  if (!paciente) throw new NotFoundError('Aluno não encontrado');
   if (!podeAcessar(paciente, ator)) {
-    throw new ForbiddenError('Paciente não vinculado ao usuário');
+    throw new ForbiddenError('Aluno não vinculado ao usuário');
   }
   return paciente;
 }
@@ -90,24 +87,24 @@ function aplicaNoDia(p: Prescricao, data: string, diaSemana: number): boolean {
 }
 
 export const medicacaoService = {
-  async listarPrescricoes(ator: AtorMedicacao, pacienteId?: string): Promise<Prescricao[]> {
+  async listarPrescricoes(ator: AtorMedicacao, alunoId?: string): Promise<Prescricao[]> {
     if (ator.role === 'admin') {
-      if (pacienteId) return prescricoesRepo.listByPaciente(pacienteId);
-      const pacientes = await pacientesRepo.listOrdenadoPorNome();
-      return prescricoesRepo.listByPacientes(pacientes.map((p) => p.id));
+      if (alunoId) return prescricoesRepo.listByAluno(alunoId);
+      const pacientes = await alunosRepo.listOrdenadoPorNome();
+      return prescricoesRepo.listByAlunos(pacientes.map((p) => p.id));
     }
-    if (pacienteId) {
-      await pacientePermitido(pacienteId, ator);
-      return prescricoesRepo.listByPaciente(pacienteId);
+    if (alunoId) {
+      await pacientePermitido(alunoId, ator);
+      return prescricoesRepo.listByAluno(alunoId);
     }
-    const meus = await pacientesRepo.listByUsuario(ator.uid);
-    return prescricoesRepo.listByPacientes(meus.map((p) => p.id));
+    const meus = await alunosRepo.listByUsuario(ator.uid);
+    return prescricoesRepo.listByAlunos(meus.map((p) => p.id));
   },
 
   async criarPrescricao(cmd: CriarPrescricaoCmd, ator: AtorMedicacao): Promise<Prescricao> {
-    await pacientePermitido(cmd.pacienteId, ator);
+    await pacientePermitido(cmd.alunoId, ator);
     const prescricao = await prescricoesRepo.create({
-      pacienteId: cmd.pacienteId,
+      alunoId: cmd.alunoId,
       medicamento: cmd.medicamento,
       dose: cmd.dose,
       via: cmd.via,
@@ -125,7 +122,7 @@ export const medicacaoService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'criar_prescricao',
-      alvo: `${cmd.pacienteId}/${prescricao.id}`,
+      alvo: `${cmd.alunoId}/${prescricao.id}`,
       nivel: 'info',
     });
     return prescricao;
@@ -138,7 +135,7 @@ export const medicacaoService = {
   ): Promise<Prescricao> {
     const prescricao = await prescricoesRepo.findById(id);
     if (!prescricao) throw new NotFoundError('Prescrição não encontrada');
-    await pacientePermitido(prescricao.pacienteId, ator);
+    await pacientePermitido(prescricao.alunoId, ator);
 
     const patch: Record<string, unknown> = {};
     if (cmd.medicamento !== undefined) patch['medicamento'] = cmd.medicamento;
@@ -166,12 +163,12 @@ export const medicacaoService = {
   async removerPrescricao(id: string, ator: AtorMedicacao): Promise<{ id: string; deletado: true }> {
     const prescricao = await prescricoesRepo.findById(id);
     if (!prescricao) throw new NotFoundError('Prescrição não encontrada');
-    await pacientePermitido(prescricao.pacienteId, ator);
+    await pacientePermitido(prescricao.alunoId, ator);
     await prescricoesRepo.remove(id);
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'remover_prescricao',
-      alvo: `${prescricao.pacienteId}/${id}`,
+      alvo: `${prescricao.alunoId}/${id}`,
       nivel: 'alerta',
     });
     return { id, deletado: true };
@@ -179,20 +176,20 @@ export const medicacaoService = {
 
   async listarAdministracoes(
     ator: AtorMedicacao,
-    pacienteId?: string,
+    alunoId?: string,
     de?: string,
     ate?: string,
   ): Promise<Administracao[]> {
-    if (pacienteId) {
-      await pacientePermitido(pacienteId, ator);
-      return administracoesRepo.listByPaciente(pacienteId, de, ate);
+    if (alunoId) {
+      await pacientePermitido(alunoId, ator);
+      return administracoesRepo.listByAluno(alunoId, de, ate);
     }
     const meus =
       ator.role === 'admin'
-        ? await pacientesRepo.listOrdenadoPorNome()
-        : await pacientesRepo.listByUsuario(ator.uid);
+        ? await alunosRepo.listOrdenadoPorNome()
+        : await alunosRepo.listByUsuario(ator.uid);
     const listas = await Promise.all(
-      meus.map((p) => administracoesRepo.listByPaciente(p.id, de, ate)),
+      meus.map((p) => administracoesRepo.listByAluno(p.id, de, ate)),
     );
     return listas.flat();
   },
@@ -203,7 +200,7 @@ export const medicacaoService = {
   ): Promise<Administracao> {
     const prescricao = await prescricoesRepo.findById(cmd.prescricaoId);
     if (!prescricao) throw new NotFoundError('Prescrição não encontrada');
-    const paciente = await pacientePermitido(prescricao.pacienteId, ator);
+    const paciente = await pacientePermitido(prescricao.alunoId, ator);
 
     const existente = await administracoesRepo.findBySlot(
       cmd.prescricaoId,
@@ -223,7 +220,7 @@ export const medicacaoService = {
         })
       : await administracoesRepo.create({
           prescricaoId: cmd.prescricaoId,
-          pacienteId: prescricao.pacienteId,
+          alunoId: prescricao.alunoId,
           data: cmd.data,
           horario: cmd.horario,
           status: cmd.status,
@@ -254,7 +251,7 @@ export const medicacaoService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'administrar_medicacao',
-      alvo: `${prescricao.pacienteId}/${prescricao.id}/${cmd.data} ${cmd.horario}`,
+      alvo: `${prescricao.alunoId}/${prescricao.id}/${cmd.data} ${cmd.horario}`,
       nivel: cmd.status === 'recusado' ? 'alerta' : 'info',
     });
 
@@ -269,7 +266,7 @@ export const medicacaoService = {
           tag: `medicacao-${prescricao.id}-${cmd.data}-${cmd.horario}`,
           renotify: true,
           data: {
-            pacienteId: prescricao.pacienteId,
+            alunoId: prescricao.alunoId,
             prescricaoId: prescricao.id,
             tipo: 'medicacao',
             tag: `medicacao-${prescricao.id}-${cmd.data}-${cmd.horario}`,
@@ -310,7 +307,7 @@ export const medicacaoService = {
         if (existente.exists) continue;
         await marcador.set({ criadoEm: new Date().toISOString() });
 
-        const paciente = await pacientesRepo.findById(prescricao.pacienteId);
+        const paciente = await alunosRepo.findById(prescricao.alunoId);
         if (!paciente) continue;
 
         void notificacaoService
@@ -323,7 +320,7 @@ export const medicacaoService = {
               renotify: true,
               requireInteraction: true,
               data: {
-                pacienteId: prescricao.pacienteId,
+                alunoId: prescricao.alunoId,
                 prescricaoId: prescricao.id,
                 tipo: 'medicacao',
                 tag: `medicacao-atraso-${prescricao.id}-${data}-${horario}`,

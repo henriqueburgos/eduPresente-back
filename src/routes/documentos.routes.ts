@@ -10,13 +10,13 @@ router.use(authMiddleware);
 router.get('/', documentoController.listar);
 router.post(
   '/',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(CriarDocumentoCmdSchema),
   documentoController.criar,
 );
 router.delete(
   '/:id',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   documentoController.remover,
 );
 

@@ -1,7 +1,7 @@
 import { NotFoundError, ForbiddenError } from '../domain/errors.js';
 import type { Role } from '../domain/types/roles.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { db } from '../repositories/base.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
 
@@ -32,17 +32,17 @@ export const usuarioService = {
     if (!usuario) throw new NotFoundError('Usuário não encontrado');
 
     // remove vínculos em pacientes
-    const pacientes = await pacientesRepo.listOrdenadoPorNome();
+    const pacientes = await alunosRepo.listOrdenadoPorNome();
     for (const p of pacientes) {
       let changed = false;
-      const cuidadorIds = p.cuidadorIds.filter((x) => x !== uid);
+      const professorIds = p.professorIds.filter((x) => x !== uid);
       const responsavelIds = p.responsavelIds.filter((x) => x !== uid);
       const familiarIds = p.familiarIds.filter((x) => x !== uid);
-      if (cuidadorIds.length !== p.cuidadorIds.length || responsavelIds.length !== p.responsavelIds.length || familiarIds.length !== p.familiarIds.length) {
+      if (professorIds.length !== p.professorIds.length || responsavelIds.length !== p.responsavelIds.length || familiarIds.length !== p.familiarIds.length) {
         changed = true;
       }
       if (changed) {
-        await pacientesRepo.update(p.id, { cuidadorIds, responsavelIds, familiarIds });
+        await alunosRepo.update(p.id, { professorIds, responsavelIds, familiarIds });
       }
     }
 

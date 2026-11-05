@@ -16,22 +16,22 @@ router.get('/:id', estoqueController.buscarPorId);
 
 router.post(
   '/',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   validate(CriarMaterialCmdSchema),
   estoqueController.criar,
 );
 router.patch(
   '/:id/movimentacao',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   validate(MovimentarEstoqueCmdSchema),
   estoqueController.movimentar,
 );
 router.patch(
   '/:id',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   validate(AtualizarMaterialCmdSchema),
   estoqueController.atualizar,
 );
-router.delete('/:id', roleGuard('admin', 'responsavel', 'familiar'), estoqueController.remover);
+router.delete('/:id', roleGuard('admin', 'responsavel', 'responsavel'), estoqueController.remover);
 
 export default router;

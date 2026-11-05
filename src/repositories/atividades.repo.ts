@@ -10,21 +10,21 @@ function toAtividade(id: string, data: FirebaseFirestore.DocumentData): Atividad
 }
 
 export const atividadesRepo = {
-  async listByPaciente(pacienteId: string): Promise<Atividade[]> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).orderBy('criadoEm', 'desc').get();
+  async listByAluno(alunoId: string): Promise<Atividade[]> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).orderBy('criadoEm', 'desc').get();
     return snap.docs.map((d) => toAtividade(d.id, d.data()));
   },
 
-  async listHoje(pacienteId?: string): Promise<Atividade[]> {
+  async listHoje(alunoId?: string): Promise<Atividade[]> {
     const prefix = todayPrefix();
     let q: FirebaseFirestore.Query = db.collection(COL).where('criadoEm', '>=', prefix);
-    if (pacienteId) q = q.where('pacienteId', '==', pacienteId);
+    if (alunoId) q = q.where('alunoId', '==', alunoId);
     const snap = await q.get();
     return snap.docs.map((d) => toAtividade(d.id, d.data())).filter((a) => a.criadoEm.startsWith(prefix));
   },
 
-  async resumoPorTipo(pacienteId?: string): Promise<Record<string, number>> {
-    const items = pacienteId ? await this.listByPaciente(pacienteId) : await this.listAll();
+  async resumoPorTipo(alunoId?: string): Promise<Record<string, number>> {
+    const items = alunoId ? await this.listByAluno(alunoId) : await this.listAll();
     const out: Record<string, number> = {};
     for (const a of items) out[a.tipo] = (out[a.tipo] ?? 0) + 1;
     return out;
@@ -36,7 +36,7 @@ export const atividadesRepo = {
   },
 
   async create(data: {
-    pacienteId: string;
+    alunoId: string;
     tipo: TipoAtividade;
     descricao: string;
     autorUid: string;
@@ -47,7 +47,7 @@ export const atividadesRepo = {
     const ref = db.collection(COL).doc();
     const atividade: Atividade = {
       id: ref.id,
-      pacienteId: data.pacienteId,
+      alunoId: data.alunoId,
       tipo: data.tipo,
       descricao: data.descricao,
       autorUid: data.autorUid,

@@ -3,7 +3,7 @@ import { NotFoundError, ForbiddenError } from '../domain/errors.js';
 import type { Role } from '../domain/types/roles.js';
 import type { ConviteCmd } from '../domain/schemas/commands.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
 import { claimsService } from './claims.service.js';
 
@@ -14,9 +14,9 @@ export const conviteService = {
     }
 
     // valida pacientes existem
-    for (const pid of cmd.pacienteIds) {
-      const p = await pacientesRepo.findById(pid);
-      if (!p) throw new NotFoundError(`Paciente ${pid} não encontrado`);
+    for (const pid of cmd.alunoIds) {
+      const p = await alunosRepo.findById(pid);
+      if (!p) throw new NotFoundError(`Aluno ${pid} não encontrado`);
     }
 
     // senha: usa a informada ou gera uma temporária
@@ -40,22 +40,22 @@ export const conviteService = {
       email: cmd.email,
       role: cmd.role as Role,
       escolaId: ator.escolaId,
-      pacienteIds: cmd.pacienteIds,
+      alunoIds: cmd.alunoIds,
       ativo: true,
     });
 
     // vincula pacientes ao usuário
-    for (const pid of cmd.pacienteIds) {
-      const p = await pacientesRepo.findById(pid);
+    for (const pid of cmd.alunoIds) {
+      const p = await alunosRepo.findById(pid);
       if (!p) continue;
-      if (cmd.role === 'cuidador' && !p.cuidadorIds.includes(uid)) {
-        await pacientesRepo.update(pid, { cuidadorIds: [...p.cuidadorIds, uid] });
+      if (cmd.role === 'professor' && !p.professorIds.includes(uid)) {
+        await alunosRepo.update(pid, { professorIds: [...p.professorIds, uid] });
       }
       if (cmd.role === 'responsavel' && !p.responsavelIds.includes(uid)) {
-        await pacientesRepo.update(pid, { responsavelIds: [...p.responsavelIds, uid] });
+        await alunosRepo.update(pid, { responsavelIds: [...p.responsavelIds, uid] });
       }
-      if (cmd.role === 'familiar' && !p.familiarIds.includes(uid)) {
-        await pacientesRepo.update(pid, { familiarIds: [...p.familiarIds, uid] });
+      if (cmd.role === 'responsavel' && !p.familiarIds.includes(uid)) {
+        await alunosRepo.update(pid, { familiarIds: [...p.familiarIds, uid] });
       }
     }
 

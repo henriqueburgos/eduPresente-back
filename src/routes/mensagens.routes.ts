@@ -13,13 +13,13 @@ router.use(authMiddleware);
 router.get('/', mensagemController.listar);
 router.post(
   '/',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(CriarMensagemCmdSchema),
   mensagemController.criar,
 );
 router.post(
   '/marcar-lidas',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(MarcarMensagensLidasCmdSchema),
   mensagemController.marcarLidas,
 );

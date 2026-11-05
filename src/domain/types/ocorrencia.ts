@@ -17,7 +17,7 @@ export const STATUS_OCORRENCIA: readonly StatusOcorrencia[] = [
 
 export interface Ocorrencia {
   id: string;
-  pacienteId: string;
+  alunoId: string;
   titulo: string;
   descricao: string;
   gravidade: GravidadeOcorrencia;

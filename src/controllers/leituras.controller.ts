@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { atividadesRepo } from '../repositories/atividades.repo.js';
 import { usuariosRepo } from '../repositories/usuarios.repo.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
@@ -12,53 +12,53 @@ export const leiturasController = {
   pacientes: asyncHandler(async (_req: Request, res: Response) => {
     const user = _req.user!;
     let list;
-    if (user.role === 'admin') list = await pacientesRepo.listOrdenadoPorNome();
-    else list = await pacientesRepo.listByUsuario(user.uid);
+    if (user.role === 'admin') list = await alunosRepo.listOrdenadoPorNome();
+    else list = await alunosRepo.listByUsuario(user.uid);
     res.json(list);
   }),
 
   pacienteById: asyncHandler(async (req: Request, res: Response) => {
-    const p = await pacientesRepo.findById(req.params.id!);
-    if (!p) throw new NotFoundError('Paciente não encontrado');
+    const p = await alunosRepo.findById(req.params.id!);
+    if (!p) throw new NotFoundError('Aluno não encontrado');
     const user = req.user!;
     if (user.role !== 'admin') {
       let vinculado = false;
-      if (user.role === 'cuidador') vinculado = p.cuidadorIds.includes(user.uid);
+      if (user.role === 'professor') vinculado = p.professorIds.includes(user.uid);
       else if (user.role === 'responsavel') vinculado = p.responsavelIds.includes(user.uid);
-      else if (user.role === 'familiar') {
-        vinculado = p.familiarIds.includes(user.uid) || p.cuidadorIds.includes(user.uid) || p.responsavelIds.includes(user.uid);
+      else if (user.role === 'responsavel') {
+        vinculado = p.familiarIds.includes(user.uid) || p.professorIds.includes(user.uid) || p.responsavelIds.includes(user.uid);
       }
-      if (!vinculado) throw new ForbiddenError('Paciente não vinculado ao usuário');
+      if (!vinculado) throw new ForbiddenError('Aluno não vinculado ao usuário');
     }
     res.json(p);
   }),
 
-  atividadesByPaciente: asyncHandler(async (req: Request, res: Response) => {
-    const p = await pacientesRepo.findById(req.params.id!);
-    if (!p) throw new NotFoundError('Paciente não encontrado');
+  atividadesByAluno: asyncHandler(async (req: Request, res: Response) => {
+    const p = await alunosRepo.findById(req.params.id!);
+    if (!p) throw new NotFoundError('Aluno não encontrado');
     const user = req.user!;
     if (user.role !== 'admin') {
       let vinculado = false;
-      if (user.role === 'cuidador') vinculado = p.cuidadorIds.includes(user.uid);
+      if (user.role === 'professor') vinculado = p.professorIds.includes(user.uid);
       else if (user.role === 'responsavel') vinculado = p.responsavelIds.includes(user.uid);
-      else if (user.role === 'familiar') {
-        vinculado = p.familiarIds.includes(user.uid) || p.cuidadorIds.includes(user.uid) || p.responsavelIds.includes(user.uid);
+      else if (user.role === 'responsavel') {
+        vinculado = p.familiarIds.includes(user.uid) || p.professorIds.includes(user.uid) || p.responsavelIds.includes(user.uid);
       }
-      if (!vinculado) throw new ForbiddenError('Paciente não vinculado ao usuário');
+      if (!vinculado) throw new ForbiddenError('Aluno não vinculado ao usuário');
     }
-    const list = await atividadesRepo.listByPaciente(req.params.id!);
+    const list = await atividadesRepo.listByAluno(req.params.id!);
     res.json(list);
   }),
 
   atividadesHoje: asyncHandler(async (req: Request, res: Response) => {
-    const pacienteId = req.query.pacienteId as string | undefined;
-    const list = await atividadesRepo.listHoje(pacienteId);
+    const alunoId = req.query.alunoId as string | undefined;
+    const list = await atividadesRepo.listHoje(alunoId);
     res.json(list);
   }),
 
   atividadesResumo: asyncHandler(async (req: Request, res: Response) => {
-    const pacienteId = req.query.pacienteId as string | undefined;
-    const resumo = await atividadesRepo.resumoPorTipo(pacienteId);
+    const alunoId = req.query.alunoId as string | undefined;
+    const resumo = await atividadesRepo.resumoPorTipo(alunoId);
     res.json(resumo);
   }),
 

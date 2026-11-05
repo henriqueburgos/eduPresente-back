@@ -9,11 +9,11 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/', roleGuard('admin', 'cuidador', 'responsavel', 'familiar'), validate(RegistrarAtividadeCmdSchema), atividadesController.registrar);
+router.post('/', roleGuard('admin', 'professor', 'responsavel', 'responsavel'), validate(RegistrarAtividadeCmdSchema), atividadesController.registrar);
 
 router.get('/', roleGuard('admin'), leiturasController.atividadesAll);
 router.get('/hoje', leiturasController.atividadesHoje);
 router.get('/resumo', leiturasController.atividadesResumo);
-router.get('/paciente/:id', leiturasController.atividadesByPaciente);
+router.get('/paciente/:id', leiturasController.atividadesByAluno);
 
 export default router;

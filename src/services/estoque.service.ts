@@ -1,18 +1,18 @@
 import { FieldValue } from 'firebase-admin/firestore';
 
 import { ConflictError, ForbiddenError, NotFoundError } from '../domain/errors.js';
-import { calcularNovaQuantidade, podeAcessarPaciente } from '../domain/regras-estoque.js';
+import { calcularNovaQuantidade, podeAcessarAluno } from '../domain/regras-estoque.js';
 import type { AtorEstoque } from '../domain/regras-estoque.js';
 import type { AtualizarMaterialCmd, CriarMaterialCmd, MovimentarEstoqueCmd } from '../domain/schemas/commands.js';
-import type { MaterialEstoque, Paciente } from '../domain/types/entidades.js';
+import type { MaterialEstoque, Aluno } from '../domain/types/entidades.js';
 import { auditoriaRepo } from '../repositories/auditoria.repo.js';
 import { estoqueRepo } from '../repositories/estoque.repo.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { notificacaoService } from './notificacao.service.js';
 
-function notificarMinimo(paciente: Paciente, material: MaterialEstoque): void {
+function notificarMinimo(paciente: Aluno, material: MaterialEstoque): void {
   const uids = [
-    ...new Set([...paciente.responsavelIds, ...paciente.familiarIds, ...paciente.cuidadorIds]),
+    ...new Set([...paciente.responsavelIds, ...paciente.familiarIds, ...paciente.professorIds]),
   ];
   if (uids.length === 0) return;
 
@@ -22,7 +22,7 @@ function notificarMinimo(paciente: Paciente, material: MaterialEstoque): void {
         uid,
         title: 'Estoque no mínimo',
         body: `${material.nome}: ${material.quantidade} ${material.unidade} (mínimo ${material.quantidadeMinima}).`,
-        data: { pacienteId: material.pacienteId, materialId: material.id },
+        data: { alunoId: material.alunoId, materialId: material.id },
       }),
     ),
   );
@@ -30,14 +30,14 @@ function notificarMinimo(paciente: Paciente, material: MaterialEstoque): void {
 
 export const estoqueService = {
   async criar(cmd: CriarMaterialCmd, ator: AtorEstoque): Promise<MaterialEstoque> {
-    const paciente = await pacientesRepo.findById(cmd.pacienteId);
-    if (!paciente) throw new NotFoundError('Paciente não encontrado');
-    if (!podeAcessarPaciente(paciente, ator)) {
-      throw new ForbiddenError('Paciente não vinculado ao usuário');
+    const paciente = await alunosRepo.findById(cmd.alunoId);
+    if (!paciente) throw new NotFoundError('Aluno não encontrado');
+    if (!podeAcessarAluno(paciente, ator)) {
+      throw new ForbiddenError('Aluno não vinculado ao usuário');
     }
 
     const material = await estoqueRepo.create({
-      pacienteId: cmd.pacienteId,
+      alunoId: cmd.alunoId,
       nome: cmd.nome,
       categoria: cmd.categoria,
       quantidade: cmd.quantidade,
@@ -50,34 +50,34 @@ export const estoqueService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'criar_material',
-      alvo: `${material.pacienteId}/${material.id}`,
+      alvo: `${material.alunoId}/${material.id}`,
       nivel: 'info',
     });
 
     return material;
   },
 
-  async listar(ator: AtorEstoque, pacienteId?: string): Promise<MaterialEstoque[]> {
-    if (ator.role !== 'admin' && ator.role !== 'responsavel' && ator.role !== 'familiar') {
+  async listar(ator: AtorEstoque, alunoId?: string): Promise<MaterialEstoque[]> {
+    if (ator.role !== 'admin' && ator.role !== 'responsavel') {
       throw new ForbiddenError('Perfil sem permissão para acessar o estoque');
     }
 
     if (ator.role === 'admin') {
-      return pacienteId ? estoqueRepo.listByPaciente(pacienteId) : estoqueRepo.listAll();
+      return alunoId ? estoqueRepo.listByAluno(alunoId) : estoqueRepo.listAll();
     }
 
-    if (pacienteId) {
-      const paciente = await pacientesRepo.findById(pacienteId);
-      if (!paciente) throw new NotFoundError('Paciente não encontrado');
-      if (!podeAcessarPaciente(paciente, ator)) {
-        throw new ForbiddenError('Paciente não vinculado ao usuário');
+    if (alunoId) {
+      const paciente = await alunosRepo.findById(alunoId);
+      if (!paciente) throw new NotFoundError('Aluno não encontrado');
+      if (!podeAcessarAluno(paciente, ator)) {
+        throw new ForbiddenError('Aluno não vinculado ao usuário');
       }
-      return estoqueRepo.listByPaciente(pacienteId);
+      return estoqueRepo.listByAluno(alunoId);
     }
 
-    const meus = await pacientesRepo.listByUsuario(ator.uid);
-    const permitidos = meus.filter((p) => podeAcessarPaciente(p, ator));
-    return estoqueRepo.listByPacientes(permitidos.map((p) => p.id));
+    const meus = await alunosRepo.listByUsuario(ator.uid);
+    const permitidos = meus.filter((p) => podeAcessarAluno(p, ator));
+    return estoqueRepo.listByAlunos(permitidos.map((p) => p.id));
   },
 
   async buscarPorId(id: string, ator: AtorEstoque): Promise<MaterialEstoque> {
@@ -85,10 +85,10 @@ export const estoqueService = {
     if (!material) throw new NotFoundError('Material não encontrado');
 
     if (ator.role !== 'admin') {
-      const paciente = await pacientesRepo.findById(material.pacienteId);
-      if (!paciente) throw new NotFoundError('Paciente não encontrado');
-      if (!podeAcessarPaciente(paciente, ator)) {
-        throw new ForbiddenError('Paciente não vinculado ao usuário');
+      const paciente = await alunosRepo.findById(material.alunoId);
+      if (!paciente) throw new NotFoundError('Aluno não encontrado');
+      if (!podeAcessarAluno(paciente, ator)) {
+        throw new ForbiddenError('Aluno não vinculado ao usuário');
       }
     }
 
@@ -98,16 +98,16 @@ export const estoqueService = {
   async atualizar(id: string, cmd: AtualizarMaterialCmd, ator: AtorEstoque): Promise<MaterialEstoque> {
     const material = await this.buscarPorId(id, ator);
 
-    if (cmd.pacienteId !== undefined && cmd.pacienteId !== material.pacienteId) {
-      const novoPaciente = await pacientesRepo.findById(cmd.pacienteId);
-      if (!novoPaciente) throw new NotFoundError('Paciente não encontrado');
-      if (!podeAcessarPaciente(novoPaciente, ator)) {
-        throw new ForbiddenError('Paciente não vinculado ao usuário');
+    if (cmd.alunoId !== undefined && cmd.alunoId !== material.alunoId) {
+      const novoAluno = await alunosRepo.findById(cmd.alunoId);
+      if (!novoAluno) throw new NotFoundError('Aluno não encontrado');
+      if (!podeAcessarAluno(novoAluno, ator)) {
+        throw new ForbiddenError('Aluno não vinculado ao usuário');
       }
     }
 
     const patch: Record<string, unknown> = {};
-    if (cmd.pacienteId !== undefined) patch.pacienteId = cmd.pacienteId;
+    if (cmd.alunoId !== undefined) patch.alunoId = cmd.alunoId;
     if (cmd.nome !== undefined) patch.nome = cmd.nome;
     if (cmd.categoria !== undefined) patch.categoria = cmd.categoria;
     if (cmd.quantidade !== undefined) patch.quantidade = cmd.quantidade;
@@ -127,7 +127,7 @@ export const estoqueService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'atualizar_material',
-      alvo: `${updated.pacienteId}/${id}`,
+      alvo: `${updated.alunoId}/${id}`,
       nivel: 'info',
     });
 
@@ -146,7 +146,7 @@ export const estoqueService = {
     if (resultado.insuficiente) throw new ConflictError('Estoque insuficiente para a saída');
 
     const atualizado = resultado.material;
-    const paciente = await pacientesRepo.findById(atualizado.pacienteId);
+    const paciente = await alunosRepo.findById(atualizado.alunoId);
     const cruzouMinimo =
       material.quantidade > material.quantidadeMinima &&
       atualizado.quantidade <= atualizado.quantidadeMinima;
@@ -155,7 +155,7 @@ export const estoqueService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'movimentar_estoque',
-      alvo: `${atualizado.pacienteId}/${id}`,
+      alvo: `${atualizado.alunoId}/${id}`,
       nivel: atualizado.quantidade <= atualizado.quantidadeMinima ? 'alerta' : 'info',
     });
 
@@ -169,7 +169,7 @@ export const estoqueService = {
     await auditoriaRepo.create({
       ator: ator.uid,
       acao: 'remover_material',
-      alvo: `${material.pacienteId}/${id}`,
+      alvo: `${material.alunoId}/${id}`,
       nivel: 'alerta',
     });
 

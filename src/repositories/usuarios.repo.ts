@@ -46,11 +46,11 @@ export const usuariosRepo = {
     return toUsuario(updated.id, updated.data()!);
   },
 
-  async updatePacienteIds(uid: string, pacienteIds: string[]): Promise<Usuario | null> {
+  async updateAlunoIds(uid: string, alunoIds: string[]): Promise<Usuario | null> {
     const ref = db.collection(COL).doc(uid);
     const doc = await ref.get();
     if (!doc.exists) return null;
-    await ref.update({ pacienteIds });
+    await ref.update({ alunoIds });
     const updated = await ref.get();
     return toUsuario(updated.id, updated.data()!);
   },

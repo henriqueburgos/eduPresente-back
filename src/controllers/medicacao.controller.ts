@@ -6,8 +6,8 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 export const medicacaoController = {
   listarPrescricoes: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const pacienteId = typeof req.query.pacienteId === 'string' ? req.query.pacienteId : undefined;
-    const list = await medicacaoService.listarPrescricoes(ator, pacienteId);
+    const alunoId = typeof req.query.alunoId === 'string' ? req.query.alunoId : undefined;
+    const list = await medicacaoService.listarPrescricoes(ator, alunoId);
     res.json(list);
   }),
 
@@ -35,10 +35,10 @@ export const medicacaoController = {
 
   listarAdministracoes: asyncHandler(async (req: Request, res: Response) => {
     const ator = { uid: req.user!.uid, role: req.user!.role };
-    const pacienteId = typeof req.query.pacienteId === 'string' ? req.query.pacienteId : undefined;
+    const alunoId = typeof req.query.alunoId === 'string' ? req.query.alunoId : undefined;
     const de = typeof req.query.de === 'string' ? req.query.de : undefined;
     const ate = typeof req.query.ate === 'string' ? req.query.ate : undefined;
-    const list = await medicacaoService.listarAdministracoes(ator, pacienteId, de, ate);
+    const list = await medicacaoService.listarAdministracoes(ator, alunoId, de, ate);
     res.json(list);
   }),
 

@@ -1,5 +1,5 @@
 import { ConflictError } from './errors.js';
-import type { Paciente } from './types/entidades.js';
+import type { Aluno } from './types/entidades.js';
 import type { Role } from './types/roles.js';
 import type { TipoMovimentacao } from './types/estoque.js';
 
@@ -8,22 +8,19 @@ export interface AtorEstoque {
   role: Role;
 }
 
-export function podeAcessarPaciente(paciente: Paciente, ator: AtorEstoque): boolean {
+export function podeAcessarAluno(paciente: Aluno, ator: AtorEstoque): boolean {
   if (ator.role === 'admin') return true;
   if (ator.role === 'responsavel') {
-    return paciente.responsavelIds.includes(ator.uid) || paciente.familiarIds.includes(ator.uid);
-  }
-  if (ator.role === 'familiar') {
     return (
-      paciente.familiarIds.includes(ator.uid) ||
       paciente.responsavelIds.includes(ator.uid) ||
-      paciente.cuidadorIds.includes(ator.uid)
+      paciente.familiarIds.includes(ator.uid) ||
+      paciente.professorIds.includes(ator.uid)
     );
   }
   // Cuidador não administra o estoque, mas precisa consumir materiais ao
   // registrar o cuidado do dia.
-  if (ator.role === 'cuidador') {
-    return paciente.cuidadorIds.includes(ator.uid);
+  if (ator.role === 'professor') {
+    return paciente.professorIds.includes(ator.uid);
   }
   return false;
 }

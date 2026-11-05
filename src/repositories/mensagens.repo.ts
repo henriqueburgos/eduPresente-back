@@ -21,17 +21,17 @@ export const mensagensRepo = {
     return mensagem;
   },
 
-  async listByPaciente(pacienteId: string): Promise<Mensagem[]> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async listByAluno(alunoId: string): Promise<Mensagem[]> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     return ordenar(snap.docs.map((d) => toMensagem(d.id, d.data())));
   },
 
-  async listByPacientes(pacienteIds: string[]): Promise<Mensagem[]> {
-    if (pacienteIds.length === 0) return [];
+  async listByAlunos(alunoIds: string[]): Promise<Mensagem[]> {
+    if (alunoIds.length === 0) return [];
     const lotes: string[][] = [];
-    for (let i = 0; i < pacienteIds.length; i += 30) lotes.push(pacienteIds.slice(i, i + 30));
+    for (let i = 0; i < alunoIds.length; i += 30) lotes.push(alunoIds.slice(i, i + 30));
     const snaps = await Promise.all(
-      lotes.map((lote) => db.collection(COL).where('pacienteId', 'in', lote).get()),
+      lotes.map((lote) => db.collection(COL).where('alunoId', 'in', lote).get()),
     );
     const mapa = new Map<string, Mensagem>();
     for (const snap of snaps) for (const d of snap.docs) mapa.set(d.id, toMensagem(d.id, d.data()));
@@ -43,8 +43,8 @@ export const mensagensRepo = {
     return ordenar(snap.docs.map((d) => toMensagem(d.id, d.data())));
   },
 
-  async marcarLidas(pacienteId: string, uid: string): Promise<number> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async marcarLidas(alunoId: string, uid: string): Promise<number> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     const naoLidas = snap.docs.filter((d) => {
       const lidaPor = d.data()['lidaPor'];
       return !Array.isArray(lidaPor) || !lidaPor.includes(uid);
@@ -58,8 +58,8 @@ export const mensagensRepo = {
     return naoLidas.length;
   },
 
-  async removeByPaciente(pacienteId: string): Promise<void> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async removeByAluno(alunoId: string): Promise<void> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     if (snap.empty) return;
     const lote = db.batch();
     for (const doc of snap.docs) lote.delete(doc.ref);

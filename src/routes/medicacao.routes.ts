@@ -14,26 +14,26 @@ router.use(authMiddleware);
 router.get('/prescricoes', medicacaoController.listarPrescricoes);
 router.post(
   '/prescricoes',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   validate(CriarPrescricaoCmdSchema),
   medicacaoController.criarPrescricao,
 );
 router.patch(
   '/prescricoes/:id',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   validate(AtualizarPrescricaoCmdSchema),
   medicacaoController.atualizarPrescricao,
 );
 router.delete(
   '/prescricoes/:id',
-  roleGuard('admin', 'responsavel', 'familiar'),
+  roleGuard('admin', 'responsavel', 'responsavel'),
   medicacaoController.removerPrescricao,
 );
 
 router.get('/administracoes', medicacaoController.listarAdministracoes);
 router.post(
   '/administracoes',
-  roleGuard('admin', 'cuidador', 'responsavel', 'familiar'),
+  roleGuard('admin', 'professor', 'responsavel', 'responsavel'),
   validate(RegistrarAdministracaoCmdSchema),
   medicacaoController.registrarAdministracao,
 );

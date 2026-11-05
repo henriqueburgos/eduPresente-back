@@ -15,10 +15,10 @@ export const claimsService = {
     await firebaseAuth.setCustomUserClaims(uid, {
       role: usuario.role,
       escolaId: usuario.escolaId ?? '',
-      pacienteIds: usuario.pacienteIds,
+      alunoIds: usuario.alunoIds,
     });
 
-    return { uid, role: usuario.role, pacienteIds: usuario.pacienteIds };
+    return { uid, role: usuario.role, alunoIds: usuario.alunoIds };
   },
 
   /** Usado na criação de conta: além das claims, invalida tokens antigos. */

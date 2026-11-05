@@ -22,7 +22,7 @@ export const ConsumoEstoqueCmdSchema = z.object({
 });
 
 export const RegistrarAtividadeCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   tipo: z.enum(TIPOS_ATIVIDADE as unknown as [TipoAtividade, ...TipoAtividade[]]),
   descricao: z.string().min(1).max(2000),
   meta: z.record(z.unknown()).optional(),
@@ -37,7 +37,7 @@ export const ConviteCmdSchema = z.object({
   nome: z.string().min(1).max(120),
   email: z.string().email(),
   role: z.enum(ROLES as unknown as [Role, ...Role[]]),
-  pacienteIds: z.array(z.string().min(1)).default([]),
+  alunoIds: z.array(z.string().min(1)).default([]),
   senha: z.string().min(6).max(128).optional(),
 });
 export type ConviteCmd = z.infer<typeof ConviteCmdSchema>;
@@ -51,7 +51,7 @@ export const RenovarClaimsCmdSchema = z.object({
   uid: z.string().min(1).optional(),
 });
 
-export const CriarPacienteCmdSchema = z.object({
+export const CriarAlunoCmdSchema = z.object({
   nome: z.string().min(1).max(120),
   idade: z.number().int().nonnegative(),
   local: z.string().max(60).optional(),
@@ -59,20 +59,20 @@ export const CriarPacienteCmdSchema = z.object({
   quarto: z.string().max(60).optional(),
   fotoUrl: z.string().max(400000).optional(),
   condicoes: z.array(z.string()).default([]),
-  cuidadorIds: z.array(z.string()).default([]),
+  professorIds: z.array(z.string()).default([]),
   responsavelIds: z.array(z.string()).default([]),
   familiarIds: z.array(z.string()).default([]),
 });
-export type CriarPacienteCmd = z.infer<typeof CriarPacienteCmdSchema>;
+export type CriarAlunoCmd = z.infer<typeof CriarAlunoCmdSchema>;
 export type RenovarClaimsCmd = z.infer<typeof RenovarClaimsCmdSchema>;
-export const PatchPacienteCmdSchema = z.object({
-  cuidadorIds: z.array(z.string().min(1)).optional(),
+export const PatchAlunoCmdSchema = z.object({
+  professorIds: z.array(z.string().min(1)).optional(),
   responsavelIds: z.array(z.string().min(1)).optional(),
   familiarIds: z.array(z.string().min(1)).optional(),
 });
-export type PatchPacienteCmd = z.infer<typeof PatchPacienteCmdSchema>;
+export type PatchAlunoCmd = z.infer<typeof PatchAlunoCmdSchema>;
 
-export const AtualizarPacienteCmdSchema = z.object({
+export const AtualizarAlunoCmdSchema = z.object({
   nome: z.string().min(1).max(120).optional(),
   idade: z.number().int().nonnegative().optional(),
   local: z.string().max(60).optional(),
@@ -89,10 +89,10 @@ export const AtualizarPacienteCmdSchema = z.object({
   grauDependencia: z.enum(['independente', 'parcial', 'total']).optional(),
   observacoesClinicas: z.string().max(2000).nullable().optional(),
 });
-export type AtualizarPacienteCmd = z.infer<typeof AtualizarPacienteCmdSchema>;
+export type AtualizarAlunoCmd = z.infer<typeof AtualizarAlunoCmdSchema>;
 
 export const CriarMaterialCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   nome: z.string().min(1).max(120),
   categoria: z.enum(CATEGORIAS_MATERIAL as unknown as [CategoriaMaterial, ...CategoriaMaterial[]]),
   quantidade: z.number().int().nonnegative(),
@@ -104,7 +104,7 @@ export const CriarMaterialCmdSchema = z.object({
 export type CriarMaterialCmd = z.infer<typeof CriarMaterialCmdSchema>;
 
 export const AtualizarMaterialCmdSchema = z.object({
-  pacienteId: z.string().min(1).optional(),
+  alunoId: z.string().min(1).optional(),
   nome: z.string().min(1).max(120).optional(),
   categoria: z.enum(CATEGORIAS_MATERIAL as unknown as [CategoriaMaterial, ...CategoriaMaterial[]]).optional(),
   quantidade: z.number().int().nonnegative().optional(),
@@ -122,7 +122,7 @@ export const MovimentarEstoqueCmdSchema = z.object({
 export type MovimentarEstoqueCmd = z.infer<typeof MovimentarEstoqueCmdSchema>;
 
 export const CriarAgendaCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   categoria: z.enum(CATEGORIAS_AGENDA as unknown as [CategoriaAgenda, ...CategoriaAgenda[]]),
   rotinaId: z.string().min(1).optional(),
   titulo: z.string().min(1).max(120),
@@ -153,7 +153,7 @@ const HORARIO = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const DATA = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const CriarPrescricaoCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   medicamento: z.string().min(1).max(120),
   dose: z.string().min(1).max(80),
   via: z.enum(VIAS_ADMINISTRACAO as unknown as [ViaAdministracao, ...ViaAdministracao[]]),
@@ -199,7 +199,7 @@ export const RegistrarAdministracaoCmdSchema = z.object({
 export type RegistrarAdministracaoCmd = z.infer<typeof RegistrarAdministracaoCmdSchema>;
 
 export const CriarOcorrenciaCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   titulo: z.string().min(1).max(160),
   descricao: z.string().min(1).max(2000),
   gravidade: z.enum(
@@ -222,7 +222,7 @@ export const AtualizarOcorrenciaCmdSchema = z.object({
 export type AtualizarOcorrenciaCmd = z.infer<typeof AtualizarOcorrenciaCmdSchema>;
 
 export const CriarDocumentoCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   nome: z.string().min(1).max(200),
   categoria: z.enum(CATEGORIAS_DOCUMENTO as unknown as [CategoriaDocumento, ...CategoriaDocumento[]]),
   url: z.string().url(),
@@ -233,13 +233,13 @@ export const CriarDocumentoCmdSchema = z.object({
 export type CriarDocumentoCmd = z.infer<typeof CriarDocumentoCmdSchema>;
 
 export const CriarMensagemCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
   texto: z.string().min(1).max(2000),
 });
 export type CriarMensagemCmd = z.infer<typeof CriarMensagemCmdSchema>;
 
 export const MarcarMensagensLidasCmdSchema = z.object({
-  pacienteId: z.string().min(1),
+  alunoId: z.string().min(1),
 });
 export type MarcarMensagensLidasCmd = z.infer<typeof MarcarMensagensLidasCmdSchema>;
 

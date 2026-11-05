@@ -16,14 +16,14 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
     const decoded = await firebaseAuth.verifyIdToken(token);
     const role: Role = isRole(decoded.role) ? decoded.role : 'responsavel';
     const escolaId = typeof decoded.escolaId === 'string' ? decoded.escolaId : '';
-    const pacienteIds = Array.isArray(decoded.pacienteIds)
-      ? (decoded.pacienteIds as unknown[]).filter((v): v is string => typeof v === 'string')
+    const alunoIds = Array.isArray(decoded.alunoIds)
+      ? (decoded.alunoIds as unknown[]).filter((v): v is string => typeof v === 'string')
       : [];
     const user: NonNullable<Request['user']> = {
       uid: decoded.uid,
       role,
       escolaId,
-      pacienteIds,
+      alunoIds,
     };
     if (decoded.email) user.email = decoded.email;
     req.user = user;

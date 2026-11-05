@@ -2,7 +2,7 @@ import type { Role } from './roles.js';
 
 export interface Mensagem {
   id: string;
-  pacienteId: string;
+  alunoId: string;
   autorUid: string;
   autorNome: string;
   autorRole: Role;

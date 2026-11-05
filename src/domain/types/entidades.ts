@@ -16,7 +16,7 @@ export interface MedicoResponsavel {
   telefone?: string | undefined;
 }
 
-export interface Paciente {
+export interface Aluno {
   id: string;
   escolaId?: string | undefined;
   nome: string;
@@ -28,7 +28,7 @@ export interface Paciente {
   fotoUrl?: string | undefined;
   condicoes: string[];
   responsavelIds: string[];
-  cuidadorIds: string[];
+  professorIds: string[];
   familiarIds: string[];
   entradaEm: string; // ISO date
   alergias: string[];
@@ -43,7 +43,7 @@ export interface Paciente {
 
 export interface Atividade {
   id: string;
-  pacienteId: string;
+  alunoId: string;
   tipo: TipoAtividade;
   descricao: string;
   autorUid: string;
@@ -59,7 +59,7 @@ export interface Usuario {
   nome: string;
   email: string;
   role: Role;
-  pacienteIds: string[];
+  alunoIds: string[];
   fcmTokens: string[];
   ativo: boolean;
   criadoEm: string; // ISO timestamp
@@ -85,7 +85,7 @@ export interface Comunicado {
 
 export interface MaterialEstoque {
   id: string;
-  pacienteId: string;
+  alunoId: string;
   nome: string;
   categoria: CategoriaMaterial;
   quantidade: number;

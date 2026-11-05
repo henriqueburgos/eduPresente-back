@@ -1,8 +1,8 @@
 import PDFDocument from 'pdfkit';
 import { ForbiddenError, NotFoundError } from '../domain/errors.js';
 import type { Role } from '../domain/types/roles.js';
-import type { Paciente } from '../domain/types/entidades.js';
-import { pacientesRepo } from '../repositories/pacientes.repo.js';
+import type { Aluno } from '../domain/types/entidades.js';
+import { alunosRepo } from '../repositories/alunos.repo.js';
 import { atividadesRepo } from '../repositories/atividades.repo.js';
 import { ocorrenciasRepo } from '../repositories/ocorrencias.repo.js';
 import { prescricoesRepo } from '../repositories/prescricoes.repo.js';
@@ -18,10 +18,10 @@ const MARCA = '#c94a3a';
 const TEXTO = '#2d2220';
 const SUBTLE = '#7a6058';
 
-function podeAcessar(paciente: Paciente, ator: AtorRelatorio): boolean {
+function podeAcessar(paciente: Aluno, ator: AtorRelatorio): boolean {
   if (ator.role === 'admin') return true;
   return (
-    paciente.cuidadorIds.includes(ator.uid) ||
+    paciente.professorIds.includes(ator.uid) ||
     paciente.responsavelIds.includes(ator.uid) ||
     paciente.familiarIds.includes(ator.uid)
   );
@@ -52,23 +52,23 @@ function aplicaNoDia(p: { ativo: boolean; inicio: string; fim?: string | undefin
 
 export const relatorioService = {
   async gerar(
-    pacienteId: string,
+    alunoId: string,
     de: string,
     ate: string,
     ator: AtorRelatorio,
   ): Promise<{ buffer: Buffer; nome: string }> {
-    const paciente = await pacientesRepo.findById(pacienteId);
-    if (!paciente) throw new NotFoundError('Paciente não encontrado');
+    const paciente = await alunosRepo.findById(alunoId);
+    if (!paciente) throw new NotFoundError('Aluno não encontrado');
     if (!podeAcessar(paciente, ator)) {
-      throw new ForbiddenError('Paciente não vinculado ao usuário');
+      throw new ForbiddenError('Aluno não vinculado ao usuário');
     }
 
     const [atividades, ocorrencias, prescricoes, administracoes, estoque] = await Promise.all([
-      atividadesRepo.listByPaciente(pacienteId),
-      ocorrenciasRepo.listByPaciente(pacienteId),
-      prescricoesRepo.listByPaciente(pacienteId),
-      administracoesRepo.listByPaciente(pacienteId, de, ate),
-      estoqueRepo.listByPaciente(pacienteId),
+      atividadesRepo.listByAluno(alunoId),
+      ocorrenciasRepo.listByAluno(alunoId),
+      prescricoesRepo.listByAluno(alunoId),
+      administracoesRepo.listByAluno(alunoId, de, ate),
+      estoqueRepo.listByAluno(alunoId),
     ]);
 
     const atividadesPeriodo = atividades.filter((a) => {
@@ -119,7 +119,7 @@ export const relatorioService = {
       doc.fillColor(SUBTLE).fontSize(10).font('Helvetica').text(`Período: ${de} a ${ate}`);
       doc.moveDown(1);
 
-      // Paciente
+      // Aluno
       doc.fillColor(TEXTO).fontSize(13).font('Helvetica-Bold').text(paciente.nome);
       doc.fontSize(10).font('Helvetica').fillColor(SUBTLE);
       doc.text(

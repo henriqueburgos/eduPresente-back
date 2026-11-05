@@ -8,7 +8,7 @@ declare global {
         email?: string;
         role: Role;
         escolaId: string;
-        pacienteIds: string[];
+        alunoIds: string[];
       };
     }
   }

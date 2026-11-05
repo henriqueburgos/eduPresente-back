@@ -11,14 +11,14 @@ const paths = {
   '/pacientes': {
     get: {
       summary: 'Lista pacientes',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       responses: {
-        '200': { description: 'Lista de pacientes', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Paciente' } } } } },
+        '200': { description: 'Lista de pacientes', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Aluno' } } } } },
       },
     },
     post: {
       summary: 'Criar paciente (admin/responsavel/familiar)',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       requestBody: {
         required: true,
         content: {
@@ -32,7 +32,7 @@ const paths = {
                 local: { type: 'string', description: 'Onde o paciente está (casa, quarto, leito…)' },
                 fotoUrl: { type: 'string', description: 'Data URL da foto de perfil' },
                 condicoes: { type: 'array', items: { type: 'string' } },
-                cuidadorIds: { type: 'array', items: { type: 'string' } },
+                professorIds: { type: 'array', items: { type: 'string' } },
                 responsavelIds: { type: 'array', items: { type: 'string' } },
                 familiarIds: { type: 'array', items: { type: 'string' } },
               },
@@ -40,23 +40,23 @@ const paths = {
           },
         },
       },
-      responses: { '201': { description: 'Paciente criado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Paciente' } } } } },
+      responses: { '201': { description: 'Aluno criado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Aluno' } } } } },
     },
   },
   '/pacientes/{id}': {
     get: {
       summary: 'Busca paciente por ID',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': { description: 'Paciente', content: { 'application/json': { schema: { $ref: '#/components/schemas/Paciente' } } } },
+        '200': { description: 'Aluno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Aluno' } } } },
         '403': { description: 'Não vinculado' },
         '404': { description: 'Não encontrado' },
       },
     },
     patch: {
       summary: 'Atualizar dados do paciente (admin)',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       requestBody: {
         content: {
@@ -74,11 +74,11 @@ const paths = {
           },
         },
       },
-      responses: { '200': { description: 'Paciente atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Paciente' } } } } },
+      responses: { '200': { description: 'Aluno atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Aluno' } } } } },
     },
     delete: {
       summary: 'Deletar paciente (hard delete, admin)',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: { '200': { description: '{ id, deletado }' } },
     },
@@ -86,7 +86,7 @@ const paths = {
   '/pacientes/{id}/vinculos': {
     patch: {
       summary: 'Vincular/desvincular cuidadores, responsáveis e familiares a um paciente (admin)',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       requestBody: {
         content: {
@@ -94,7 +94,7 @@ const paths = {
             schema: {
               type: 'object',
               properties: {
-                cuidadorIds: { type: 'array', items: { type: 'string' } },
+                professorIds: { type: 'array', items: { type: 'string' } },
                 responsavelIds: { type: 'array', items: { type: 'string' } },
                 familiarIds: { type: 'array', items: { type: 'string' } },
               },
@@ -102,25 +102,25 @@ const paths = {
           },
         },
       },
-      responses: { '200': { description: 'Paciente atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Paciente' } } } } },
+      responses: { '200': { description: 'Aluno atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Aluno' } } } } },
     },
   },
   '/pacientes/{id}/vinculos/{uid}': {
     delete: {
       summary: 'Remover vínculo individual de um usuário a um paciente (admin)',
-      tags: ['Pacientes'],
+      tags: ['Alunos'],
       parameters: [
         { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
         { name: 'uid', in: 'path', required: true, schema: { type: 'string' } },
       ],
-      responses: { '200': { description: 'Paciente atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Paciente' } } } } },
+      responses: { '200': { description: 'Aluno atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Aluno' } } } } },
     },
   },
   '/estoque': {
     get: {
       summary: 'Lista materiais do estoque (admin: todos; demais: pacientes vinculados)',
       tags: ['Estoque'],
-      parameters: [{ name: 'pacienteId', in: 'query', schema: { type: 'string' } }],
+      parameters: [{ name: 'alunoId', in: 'query', schema: { type: 'string' } }],
       responses: { '200': { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/MaterialEstoque' } } } } } },
     },
     post: {
@@ -132,9 +132,9 @@ const paths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['pacienteId', 'nome', 'categoria', 'quantidade', 'unidade'],
+              required: ['alunoId', 'nome', 'categoria', 'quantidade', 'unidade'],
               properties: {
-                pacienteId: { type: 'string' },
+                alunoId: { type: 'string' },
                 nome: { type: 'string' },
                 categoria: { type: 'string', enum: ['remedio', 'alimento', 'higiene', 'descartavel', 'roupa', 'outro'] },
                 quantidade: { type: 'integer', minimum: 0 },
@@ -157,7 +157,7 @@ const paths = {
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
         '200': { description: 'Material', content: { 'application/json': { schema: { $ref: '#/components/schemas/MaterialEstoque' } } } },
-        '403': { description: 'Paciente não vinculado' },
+        '403': { description: 'Aluno não vinculado' },
         '404': { description: 'Não encontrado' },
       },
     },
@@ -171,7 +171,7 @@ const paths = {
             schema: {
               type: 'object',
               properties: {
-                pacienteId: { type: 'string' },
+                alunoId: { type: 'string' },
                 nome: { type: 'string' },
                 categoria: { type: 'string', enum: ['remedio', 'alimento', 'higiene', 'descartavel', 'roupa', 'outro'] },
                 quantidade: { type: 'integer', minimum: 0 },
@@ -235,9 +235,9 @@ const paths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['pacienteId', 'tipo', 'descricao'],
+              required: ['alunoId', 'tipo', 'descricao'],
               properties: {
-                pacienteId: { type: 'string' },
+                alunoId: { type: 'string' },
                 tipo: { type: 'string', enum: ['alimentacao', 'medicacao', 'higiene', 'humor', 'ocorrencia'] },
                 descricao: { type: 'string' },
                 meta: { type: 'object', additionalProperties: true },
@@ -265,7 +265,7 @@ const paths = {
     get: {
       summary: 'Registros do dia',
       tags: ['Atividades'],
-      parameters: [{ name: 'pacienteId', in: 'query', schema: { type: 'string' } }],
+      parameters: [{ name: 'alunoId', in: 'query', schema: { type: 'string' } }],
       responses: { '200': { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Atividade' } } } } } },
     },
   },
@@ -273,7 +273,7 @@ const paths = {
     get: {
       summary: 'Resumo por tipo',
       tags: ['Atividades'],
-      parameters: [{ name: 'pacienteId', in: 'query', schema: { type: 'string' } }],
+      parameters: [{ name: 'alunoId', in: 'query', schema: { type: 'string' } }],
       responses: { '200': { description: 'Mapa tipo->count' } },
     },
   },
@@ -359,8 +359,8 @@ const paths = {
               properties: {
                 nome: { type: 'string' },
                 email: { type: 'string', format: 'email' },
-                role: { type: 'string', enum: ['admin', 'cuidador', 'responsavel', 'familiar'] },
-                pacienteIds: { type: 'array', items: { type: 'string' } },
+                role: { type: 'string', enum: ['admin', 'professor', 'responsavel', 'responsavel'] },
+                alunoIds: { type: 'array', items: { type: 'string' } },
               },
             },
           },
@@ -391,7 +391,7 @@ const paths = {
       requestBody: {
         content: { 'application/json': { schema: { type: 'object', properties: { uid: { type: 'string' } } } } },
       },
-      responses: { '200': { description: '{ uid, role, pacienteIds }' } },
+      responses: { '200': { description: '{ uid, role, alunoIds }' } },
     },
   },
   '/notificacoes': {
@@ -439,12 +439,12 @@ const options: any = {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT (Firebase ID token)' },
       },
       schemas: {
-        Paciente: { type: 'object', properties: { id: { type: 'string' }, nome: { type: 'string' }, idade: { type: 'integer' }, local: { type: 'string' }, fotoUrl: { type: 'string', description: 'Data URL da foto de perfil' }, condicoes: { type: 'array', items: { type: 'string' } }, responsavelIds: { type: 'array', items: { type: 'string' } }, cuidadorIds: { type: 'array', items: { type: 'string' } }, familiarIds: { type: 'array', items: { type: 'string' } }, entradaEm: { type: 'string' } } },
-        Atividade: { type: 'object', properties: { id: { type: 'string' }, pacienteId: { type: 'string' }, tipo: { type: 'string', enum: ['alimentacao', 'medicacao', 'higiene', 'humor', 'ocorrencia'] }, descricao: { type: 'string' }, autorUid: { type: 'string' }, autorNome: { type: 'string' }, criadoEm: { type: 'string', format: 'date-time' }, meta: { type: 'object', additionalProperties: true } } },
-        Usuario: { type: 'object', properties: { uid: { type: 'string' }, nome: { type: 'string' }, email: { type: 'string', format: 'email' }, role: { type: 'string', enum: ['admin', 'cuidador', 'responsavel', 'familiar'] }, pacienteIds: { type: 'array', items: { type: 'string' } }, fcmTokens: { type: 'array', items: { type: 'string' } }, ativo: { type: 'boolean' }, criadoEm: { type: 'string', format: 'date-time' } } },
+        Aluno: { type: 'object', properties: { id: { type: 'string' }, nome: { type: 'string' }, idade: { type: 'integer' }, local: { type: 'string' }, fotoUrl: { type: 'string', description: 'Data URL da foto de perfil' }, condicoes: { type: 'array', items: { type: 'string' } }, responsavelIds: { type: 'array', items: { type: 'string' } }, professorIds: { type: 'array', items: { type: 'string' } }, familiarIds: { type: 'array', items: { type: 'string' } }, entradaEm: { type: 'string' } } },
+        Atividade: { type: 'object', properties: { id: { type: 'string' }, alunoId: { type: 'string' }, tipo: { type: 'string', enum: ['alimentacao', 'medicacao', 'higiene', 'humor', 'ocorrencia'] }, descricao: { type: 'string' }, autorUid: { type: 'string' }, autorNome: { type: 'string' }, criadoEm: { type: 'string', format: 'date-time' }, meta: { type: 'object', additionalProperties: true } } },
+        Usuario: { type: 'object', properties: { uid: { type: 'string' }, nome: { type: 'string' }, email: { type: 'string', format: 'email' }, role: { type: 'string', enum: ['admin', 'professor', 'responsavel', 'responsavel'] }, alunoIds: { type: 'array', items: { type: 'string' } }, fcmTokens: { type: 'array', items: { type: 'string' } }, ativo: { type: 'boolean' }, criadoEm: { type: 'string', format: 'date-time' } } },
         Auditoria: { type: 'object', properties: { id: { type: 'string' }, ator: { type: 'string' }, acao: { type: 'string' }, alvo: { type: 'string' }, nivel: { type: 'string', enum: ['info', 'alerta', 'critico'] }, criadoEm: { type: 'string', format: 'date-time' } } },
         Comunicado: { type: 'object', properties: { id: { type: 'string' }, titulo: { type: 'string' }, corpo: { type: 'string' }, autor: { type: 'string' }, criadoEm: { type: 'string', format: 'date-time' }, fixado: { type: 'boolean' } } },
-        MaterialEstoque: { type: 'object', properties: { id: { type: 'string' }, pacienteId: { type: 'string' }, nome: { type: 'string' }, categoria: { type: 'string', enum: ['remedio', 'alimento', 'higiene', 'descartavel', 'roupa', 'outro'] }, quantidade: { type: 'integer' }, unidade: { type: 'string' }, quantidadeMinima: { type: 'integer' }, validade: { type: 'string' }, observacao: { type: 'string' }, atualizadoEm: { type: 'string', format: 'date-time' }, criadoEm: { type: 'string', format: 'date-time' } } },
+        MaterialEstoque: { type: 'object', properties: { id: { type: 'string' }, alunoId: { type: 'string' }, nome: { type: 'string' }, categoria: { type: 'string', enum: ['remedio', 'alimento', 'higiene', 'descartavel', 'roupa', 'outro'] }, quantidade: { type: 'integer' }, unidade: { type: 'string' }, quantidadeMinima: { type: 'integer' }, validade: { type: 'string' }, observacao: { type: 'string' }, atualizadoEm: { type: 'string', format: 'date-time' }, criadoEm: { type: 'string', format: 'date-time' } } },
         Error: { type: 'object', properties: { error: { type: 'string' }, message: { type: 'string' } } },
       },
     },

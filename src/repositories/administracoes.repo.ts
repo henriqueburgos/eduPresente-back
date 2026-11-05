@@ -47,12 +47,12 @@ export const administracoesRepo = {
     return toAdministracao(updated.id, updated.data()!);
   },
 
-  async listByPaciente(
-    pacienteId: string,
+  async listByAluno(
+    alunoId: string,
     de?: string,
     ate?: string,
   ): Promise<Administracao[]> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     return snap.docs
       .map((d) => toAdministracao(d.id, d.data()))
       .filter((a) => (de ? a.data >= de : true) && (ate ? a.data <= ate : true))
@@ -64,8 +64,8 @@ export const administracoesRepo = {
     return snap.docs.map((d) => toAdministracao(d.id, d.data()));
   },
 
-  async removeByPaciente(pacienteId: string): Promise<void> {
-    const snap = await db.collection(COL).where('pacienteId', '==', pacienteId).get();
+  async removeByAluno(alunoId: string): Promise<void> {
+    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
     if (snap.empty) return;
     const lote = db.batch();
     for (const doc of snap.docs) lote.delete(doc.ref);
