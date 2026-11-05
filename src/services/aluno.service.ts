@@ -37,7 +37,7 @@ export const alunoService = {
 
     // limite: responsavel/familiar só podem criar 1 paciente
     if (ator.role === 'responsavel') {
-      const existentes = await alunosRepo.listByUsuario(ator.uid);
+      const existentes = await alunosRepo.listByUsuario(ator.uid, ator.escolaId);
       const meus = existentes.filter((p) => p.responsavelIds.includes(ator.uid));
       if (meus.length >= 1) {
         throw new ConflictError('Limite de 1 paciente por responsável/familiar atingido');
