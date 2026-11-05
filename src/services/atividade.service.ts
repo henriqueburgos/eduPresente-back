@@ -13,6 +13,7 @@ export interface AtorInfo {
   uid: string;
   nome: string;
   role: Role;
+  escolaId?: string;
 }
 
 const TITULO_POR_TIPO: Record<TipoAtividade, string> = {
@@ -95,6 +96,7 @@ export const atividadeService = {
       }
 
       atividade = await atividadesRepo.create({
+        ...(ator.escolaId ? { escolaId: ator.escolaId } : {}),
         alunoId: cmd.alunoId,
         tipo: cmd.tipo,
         descricao: cmd.descricao,

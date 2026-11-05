@@ -10,15 +10,18 @@ function toAtividade(id: string, data: FirebaseFirestore.DocumentData): Atividad
 }
 
 export const atividadesRepo = {
-  async listByAluno(alunoId: string): Promise<Atividade[]> {
-    const snap = await db.collection(COL).where('alunoId', '==', alunoId).orderBy('criadoEm', 'desc').get();
+  async listByAluno(alunoId: string, escolaId?: string): Promise<Atividade[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).where('alunoId', '==', alunoId);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.orderBy('criadoEm', 'desc').get();
     return snap.docs.map((d) => toAtividade(d.id, d.data()));
   },
 
-  async listHoje(alunoId?: string): Promise<Atividade[]> {
+  async listHoje(alunoId?: string, escolaId?: string): Promise<Atividade[]> {
     const prefix = todayPrefix();
     let q: FirebaseFirestore.Query = db.collection(COL).where('criadoEm', '>=', prefix);
     if (alunoId) q = q.where('alunoId', '==', alunoId);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
     const snap = await q.get();
     return snap.docs.map((d) => toAtividade(d.id, d.data())).filter((a) => a.criadoEm.startsWith(prefix));
   },
@@ -30,12 +33,15 @@ export const atividadesRepo = {
     return out;
   },
 
-  async listAll(): Promise<Atividade[]> {
-    const snap = await db.collection(COL).orderBy('criadoEm', 'desc').limit(500).get();
+  async listAll(escolaId?: string): Promise<Atividade[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).orderBy('criadoEm', 'desc').limit(500);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return snap.docs.map((d) => toAtividade(d.id, d.data()));
   },
 
   async create(data: {
+    escolaId?: string;
     alunoId: string;
     tipo: TipoAtividade;
     descricao: string;
@@ -47,6 +53,7 @@ export const atividadesRepo = {
     const ref = db.collection(COL).doc();
     const atividade: Atividade = {
       id: ref.id,
+      ...(data.escolaId ? { escolaId: data.escolaId } : {}),
       alunoId: data.alunoId,
       tipo: data.tipo,
       descricao: data.descricao,
