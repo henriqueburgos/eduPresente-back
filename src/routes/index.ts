@@ -1,6 +1,8 @@
 import { Router } from 'express';
 
 import atividadesRoutes from './atividades.routes.js';
+import turmasRoutes from './turmas.routes.js';
+import escolasRoutes from './escolas.routes.js';
 import convitesRoutes from './convites.routes.js';
 import usuariosRoutes from './usuarios.routes.js';
 import alunosRoutes from './alunos.routes.js';
@@ -20,6 +22,8 @@ import leadsRoutes from './leads.routes.js';
 const router = Router();
 
 router.use('/atividades', atividadesRoutes);
+router.use('/turmas', turmasRoutes);
+router.use('/escolas', escolasRoutes);
 router.use('/convites', convitesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/alunos', alunosRoutes);
