@@ -29,6 +29,7 @@ export const MedicoResponsavelSchema = z.object({
 
 export const PacienteSchema = z.object({
   id: z.string().min(1),
+  escolaId: z.string().optional(),
   nome: z.string().min(1),
   idade: z.number().int().nonnegative(),
   local: z.string().max(60).default(''),
@@ -65,6 +66,7 @@ export type AtividadeInput = z.infer<typeof AtividadeSchema>;
 
 export const UsuarioSchema = z.object({
   uid: z.string().min(1),
+  escolaId: z.string().optional(),
   nome: z.string().min(1),
   email: z.string().email(),
   role: z.enum(ROLES as unknown as [Role, ...Role[]]),

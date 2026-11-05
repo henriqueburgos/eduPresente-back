@@ -8,7 +8,7 @@ import { auditoriaRepo } from '../repositories/auditoria.repo.js';
 import { claimsService } from './claims.service.js';
 
 export const conviteService = {
-  async convidar(cmd: ConviteCmd, ator: { uid: string; role: Role }) {
+  async convidar(cmd: ConviteCmd, ator: { uid: string; role: Role; escolaId?: string }) {
     if (ator.role !== 'admin') {
       throw new ForbiddenError('Apenas admin pode convidar');
     }
@@ -39,6 +39,7 @@ export const conviteService = {
       nome: cmd.nome,
       email: cmd.email,
       role: cmd.role as Role,
+      escolaId: ator.escolaId,
       pacienteIds: cmd.pacienteIds,
       ativo: true,
     });

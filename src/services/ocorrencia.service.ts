@@ -12,6 +12,7 @@ import { notificacaoService } from './notificacao.service.js';
 export interface AtorOcorrencia {
   uid: string;
   role: Role;
+  escolaId?: string;
 }
 
 const TITULO_GRAVIDADE: Record<Ocorrencia['gravidade'], string> = {

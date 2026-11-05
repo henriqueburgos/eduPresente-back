@@ -14,6 +14,7 @@ export const claimsService = {
 
     await firebaseAuth.setCustomUserClaims(uid, {
       role: usuario.role,
+      escolaId: usuario.escolaId ?? '',
       pacienteIds: usuario.pacienteIds,
     });
 

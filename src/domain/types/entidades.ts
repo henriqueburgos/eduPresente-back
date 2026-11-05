@@ -18,6 +18,7 @@ export interface MedicoResponsavel {
 
 export interface Paciente {
   id: string;
+  escolaId?: string | undefined;
   nome: string;
   idade: number;
   /** Onde o paciente está: casa, quarto, leito, instituição… */
@@ -54,6 +55,7 @@ export interface Atividade {
 
 export interface Usuario {
   uid: string;
+  escolaId?: string | undefined;
   nome: string;
   email: string;
   role: Role;
@@ -93,4 +95,29 @@ export interface MaterialEstoque {
   observacao?: string | undefined;
   atualizadoEm: string; // ISO timestamp
   criadoEm: string; // ISO timestamp
+}
+
+
+export interface Escola {
+  id: string;
+  nome: string;
+  slug: string;
+  segmentos: string[];
+  endereco?: string | undefined;
+  ativo: boolean;
+  branding?: Record<string, unknown> | undefined;
+  criadoEm: string;
+}
+
+export interface Turma {
+  id: string;
+  escolaId: string;
+  nome: string;
+  serie: string;
+  segmento: string;
+  anoLetivo: string;
+  turno: string;
+  professorIds: string[];
+  alunoIds: string[];
+  criadoEm: string;
 }

@@ -7,6 +7,7 @@ declare global {
         uid: string;
         email?: string;
         role: Role;
+        escolaId: string;
         pacienteIds: string[];
       };
     }

@@ -30,7 +30,7 @@ const CAMPOS_CLINICOS = new Set([
 const CAMPOS_PESSOAIS = new Set(['nome', 'idade', 'local', 'quarto', 'fotoUrl', 'condicoes']);
 
 export const pacienteService = {
-  async criar(cmd: CriarPacienteCmd, ator: { uid: string; role: Role }) {
+  async criar(cmd: CriarPacienteCmd, ator: { uid: string; role: Role; escolaId?: string }) {
     if (ator.role !== 'admin' && ator.role !== 'responsavel' && ator.role !== 'familiar') {
       throw new ForbiddenError('Perfil sem permissão para criar paciente');
     }
@@ -57,6 +57,7 @@ export const pacienteService = {
     if (ator.role === 'familiar' && !familiarIds.includes(ator.uid)) familiarIds.push(ator.uid);
 
     const paciente = await pacientesRepo.create({
+      escolaId: ator.escolaId,
       nome: cmd.nome,
       idade: cmd.idade,
       local: cmd.local ?? cmd.quarto ?? '',
