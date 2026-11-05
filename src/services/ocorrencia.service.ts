@@ -63,6 +63,7 @@ export const ocorrenciaService = {
   async criar(cmd: CriarOcorrenciaCmd, ator: AtorOcorrencia): Promise<Ocorrencia> {
     const paciente = await pacientePermitido(cmd.alunoId, ator);
     const ocorrencia = await ocorrenciasRepo.create({
+      ...(paciente.escolaId ? { escolaId: paciente.escolaId } : {}),
       alunoId: cmd.alunoId,
       titulo: cmd.titulo,
       descricao: cmd.descricao,

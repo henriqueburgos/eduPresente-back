@@ -27,8 +27,10 @@ export const ocorrenciasRepo = {
     return toOcorrencia(doc.id, doc.data()!);
   },
 
-  async listByAluno(alunoId: string): Promise<Ocorrencia[]> {
-    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
+  async listByAluno(alunoId: string, escolaId?: string): Promise<Ocorrencia[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).where('alunoId', '==', alunoId);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return ordenar(snap.docs.map((d) => toOcorrencia(d.id, d.data())));
   },
 
@@ -44,8 +46,10 @@ export const ocorrenciasRepo = {
     return ordenar([...mapa.values()]);
   },
 
-  async listAll(): Promise<Ocorrencia[]> {
-    const snap = await db.collection(COL).get();
+  async listAll(escolaId?: string): Promise<Ocorrencia[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return ordenar(snap.docs.map((d) => toOcorrencia(d.id, d.data())));
   },
 
