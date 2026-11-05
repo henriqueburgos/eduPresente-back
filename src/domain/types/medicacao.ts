@@ -23,6 +23,7 @@ export const STATUS_ADMINISTRACAO: readonly StatusAdministracao[] = [
 
 export interface Prescricao {
   id: string;
+  escolaId?: string | undefined;
   alunoId: string;
   medicamento: string;
   dose: string;

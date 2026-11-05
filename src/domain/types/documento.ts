@@ -10,6 +10,7 @@ export const CATEGORIAS_DOCUMENTO: readonly CategoriaDocumento[] = [
 
 export interface Documento {
   id: string;
+  escolaId?: string | undefined;
   alunoId: string;
   nome: string;
   categoria: CategoriaDocumento;

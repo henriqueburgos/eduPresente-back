@@ -43,6 +43,7 @@ export interface Aluno {
 
 export interface Atividade {
   id: string;
+  escolaId?: string | undefined;
   alunoId: string;
   tipo: TipoAtividade;
   descricao: string;
@@ -85,6 +86,7 @@ export interface Comunicado {
 
 export interface MaterialEstoque {
   id: string;
+  escolaId?: string | undefined;
   alunoId: string;
   nome: string;
   categoria: CategoriaMaterial;

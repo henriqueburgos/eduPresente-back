@@ -4,6 +4,7 @@ export const CATEGORIAS_AGENDA: readonly CategoriaAgenda[] = ['rotina', 'lembret
 
 export interface ItemAgenda {
   id: string;
+  escolaId?: string | undefined;
   alunoId: string;
   categoria: CategoriaAgenda;
   rotinaId?: string | undefined;
