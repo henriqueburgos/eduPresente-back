@@ -9,8 +9,10 @@ function toComunicado(id: string, data: FirebaseFirestore.DocumentData): Comunic
 }
 
 export const comunicadosRepo = {
-  async list(): Promise<Comunicado[]> {
-    const snap = await db.collection(COL).orderBy('criadoEm', 'desc').get();
+  async list(escolaId?: string): Promise<Comunicado[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).orderBy('criadoEm', 'desc');
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return snap.docs.map((d) => toComunicado(d.id, d.data()));
   },
 
