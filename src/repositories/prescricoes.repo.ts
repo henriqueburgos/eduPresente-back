@@ -27,8 +27,10 @@ export const prescricoesRepo = {
     return toPrescricao(doc.id, doc.data()!);
   },
 
-  async listByAluno(alunoId: string): Promise<Prescricao[]> {
-    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
+  async listByAluno(alunoId: string, escolaId?: string): Promise<Prescricao[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).where('alunoId', '==', alunoId);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return ordenar(snap.docs.map((d) => toPrescricao(d.id, d.data())));
   },
 

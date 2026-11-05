@@ -27,8 +27,10 @@ export const agendaRepo = {
     return toItem(doc.id, doc.data()!);
   },
 
-  async listByAluno(alunoId: string): Promise<ItemAgenda[]> {
-    const snap = await db.collection(COL).where('alunoId', '==', alunoId).get();
+  async listByAluno(alunoId: string, escolaId?: string): Promise<ItemAgenda[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL).where('alunoId', '==', alunoId);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return ordenar(snap.docs.map((d) => toItem(d.id, d.data())));
   },
 
@@ -44,8 +46,10 @@ export const agendaRepo = {
     return ordenar([...mapa.values()]);
   },
 
-  async listAll(): Promise<ItemAgenda[]> {
-    const snap = await db.collection(COL).get();
+  async listAll(escolaId?: string): Promise<ItemAgenda[]> {
+    let q: FirebaseFirestore.Query = db.collection(COL);
+    if (escolaId) q = q.where('escolaId', '==', escolaId);
+    const snap = await q.get();
     return ordenar(snap.docs.map((d) => toItem(d.id, d.data())));
   },
 
